@@ -1,0 +1,30 @@
+#!/bin/bash
+
+repo="ocawesome101/oc-refinement"
+name="refinement"
+path="/tmp/$name"
+
+printf "downloading source\n"
+rm -rf $path
+git clone https://github.com/$repo $path
+if ! [ -e /tmp/external ]; then
+  git clone https://github.com/ocawesome101/ulos-external /tmp/external
+else
+  oldpwd=$PWD
+  cd /tmp/external
+  git pull
+  cd $oldpwd
+fi
+
+printf "downloading build agent\n"
+wget -q https://raw.githubusercontent.com/ocawesome101/oc-ulos/master/build -O $path/build
+
+printf "building"
+oldpwd=$PWD
+cd $path
+lua build
+cd $oldpwd
+
+mkdir -p files/sbin
+cp -v $path/refinement.lua files/sbin/init.lua
+cp -rv /tmp/external/coresvc/* files/*/

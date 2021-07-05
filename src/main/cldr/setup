@@ -1,0 +1,15 @@
+#!/bin/bash
+
+repo="ocawesome101/oc-cynosure/dev"
+baseurl="https://raw.githubusercontent.com/$repo"
+outpath="files/"
+
+mkdir -p files
+
+download() {
+  printf "downloading $baseurl/$1..."
+  wget -q "$baseurl/$1" -O $outpath/$2
+  printf "done\n"
+}
+
+download init.lua

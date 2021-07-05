@@ -1,0 +1,23 @@
+#!/bin/bash
+
+repo="ocawesome101/oc-cynosure"
+name="cynosure"
+path="/tmp/$name"
+
+printf "downloading source\n"
+rm -rf $path
+git clone https://github.com/$repo $path
+
+printf "downloading build agent\n"
+wget -q https://raw.githubusercontent.com/ocawesome101/oc-ulos/master/build -O $path/build
+
+printf "building"
+oldpwd=$PWD
+cd $path
+
+lua build
+
+cd $oldpwd
+
+mkdir -p files/boot
+cp -v $path/kernel.lua files/boot/cynosure.lua

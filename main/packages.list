@@ -1,0 +1,1 @@
+{{version=1.0,author="Ocawesome101",description="Simple, configurable bootloader",mtar="pkg/cldr.mtar"},{author="Ocawesome101",description="The Cynosure kernel for OpenComputers",version=1.04,mtar="pkg/cynosure.mtar"},{version=1.06,author="Ocawesome101",description="The Refinement init system and accompanying utilities",mtar="pkg/refinement.mtar"},}

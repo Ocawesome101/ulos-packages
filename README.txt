@@ -1,1 +1,1 @@
-Extra packages for ULOS - anything not considered "core".
+Central location for all main ULOS packages.
