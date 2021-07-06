@@ -14,7 +14,7 @@ export PREPROCESSOR="$PWD/proc.lua"
 
 mkdir -p $repo/pkg/
 
-printf "{" > $repo/packages.list
+printf "{packages={" > $repo/packages.list
 
 for f in $(ls $path); do
   printf "Build package: $f\n"
@@ -30,4 +30,4 @@ for f in $(ls $path); do
   find $path/$f/files -type f | ./mtar.lua "$path/$f/files/" > $repo/pkg/$f.mtar
 done
 
-printf "}" >> $repo/packages.list
+printf "}}" >> $repo/packages.list

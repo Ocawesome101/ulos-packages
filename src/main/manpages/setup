@@ -16,4 +16,4 @@ else
 fi
 
 mkdir -p files
-cp -rv /tmp/$name/$subdir/* files/
+cp -r /tmp/$name/$subdir/* files/

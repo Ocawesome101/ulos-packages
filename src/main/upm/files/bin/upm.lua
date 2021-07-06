@@ -117,7 +117,7 @@ end
 
 local search, update, download, extract, install_package, install
 
-function search(name)
+function search(name, re)
   if opts.v then log(pfx.info, "querying repositories for package ", name) end
   local repos = cfg.Repositories
   for k, v in pairs(repos) do
@@ -129,6 +129,13 @@ function search(name)
     else
       if data.packages[name] then
         return data.packages[name], k
+      end
+      if re then
+        for k,v in pairs(data.packages) do
+          if k:match(name) then
+            return data.packages[name], k
+          end
+        end
       end
     end
   end
@@ -335,7 +342,7 @@ elseif args[1] == "search" then
     exit("command verb 'search' requires at least one argument")
   end
   for i=2, #args, 1 do
-    local data, repo = search(args[i])
+    local data, repo = search(args[i], true)
     io.write("\27[94m", repo, "\27[39m/", args[i], " ",
       installed[args[i]] and "\27[96m(installed)\27[39m" or "", "\n")
     io.write("  \27[92mAuthor: \27[39m", data.author or "(unknown)", "\n")

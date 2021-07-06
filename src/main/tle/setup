@@ -21,4 +21,4 @@ lua standalone.lua
 cd $oldpwd
 
 mkdir -p files/bin
-cp -rv /tmp/$name/tle files/bin/tle.lua
+cp -r /tmp/$name/tle files/bin/tle.lua

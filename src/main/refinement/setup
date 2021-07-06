@@ -35,4 +35,4 @@ cd $oldpwd
 
 mkdir -p files/sbin
 cp -v $path/refinement.lua files/sbin/init.lua
-cp -rv /tmp/external/coresvc/* files/*/
+cp -r /tmp/external/coresvc/* files/*/
