@@ -16,13 +16,21 @@ else
   cd $oldpwd
 fi
 
-printf "downloading build agent\n"
-wget -q https://raw.githubusercontent.com/ocawesome101/oc-ulos/master/build -O $path/build
+#printf "downloading build agent\n"
+#wget -q https://raw.githubusercontent.com/ocawesome101/oc-ulos/master/build -O $path/build
 
 printf "building"
 oldpwd=$PWD
 cd $path
-lua build
+
+imods=$(echo $IMODS | lua -e 'print((io.read():gsub(",", "\n")))')
+rm -f includes.lua && touch includes.lua
+for mod in $imods; do
+  printf -- "--#include \"%s.lua\"\n" $mod >> includes.lua
+done
+
+$PREPROCESSOR init.lua refinement.lua
+
 cd $oldpwd
 
 mkdir -p files/sbin

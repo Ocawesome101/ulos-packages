@@ -8,7 +8,7 @@ if [ -z $repo ]; then
   repo=main
 fi
 
-path=src/$repo
+path=src/$repo/
 
 export PREPROCESSOR="$PWD/proc.lua"
 
