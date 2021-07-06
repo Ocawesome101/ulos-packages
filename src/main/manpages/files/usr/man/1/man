@@ -1,0 +1,21 @@
+*{NAME}
+  man - system manual page browser
+
+*{SYNOPSIS}
+  ${man} [*{SECTION}] *{PAGE}
+
+*{DESCRIPTION}
+  ${man} is the ULOS manual page browser.  It will search #{/usr/man} for the specified *{PAGE}, place the formatted output in #{/tmp/manfmt}, and open it in the ${less}(*{1}) pager.
+
+  The following table lists available *{SECTION}s, and their categories:
+
+  *{1}  Shell commands and programs
+  *{2}  Kernel-provided API
+  *{3}  Core user libraries
+  *{4}  Special files (found under #{/sys})
+  *{5}  File formats and conventions, e.g. #{/etc/passwd}
+  *{6}  Games
+  *{7}  Miscellaneous (e.g. *{tfmt}(*{7}))
+
+*{COPYRIGHT}
+  This ${man} implementation and all manual pages are copyright (c) 2021 Ocawesome101 under the DSLv2.

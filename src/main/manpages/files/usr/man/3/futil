@@ -1,0 +1,15 @@
+*{NAME}
+  futil - filesystem utilities
+
+*{DESCRIPTION}
+  ${futil} provides certain advanced filesystem-related functions.
+
+*{FUNCTIONS}
+  blue{tree}(*{dir}:red{string}[, *{modify}:green{table}])
+    Returns a tree in the same style as ${find}(*{1}).  If green{modify} is present, results will be placed in green{modify} as well as returned.
+
+*{COPYRIGHT}
+  ULOS Core Libraries copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

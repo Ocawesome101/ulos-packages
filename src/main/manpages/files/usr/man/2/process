@@ -1,0 +1,75 @@
+*{NAME}
+  process - user-facing process management API
+
+*{DESCRIPTION}
+  ${process} is the Cynosure userspace process management API.  Information about running processes is mostly available from #{/sys/proc}.
+
+*{FUNCTIONS}
+  blue{spawn}(*{args}:green{table}): magenta{number}
+    Spawns a new process.  green{args} may contain any of the following fields (blue{func} and red{name} are required):
+
+      green{{}
+        *{func} = blue{function},
+        *{name} = red{string},
+        *{stdin} = *{FILE*},
+        *{stdout} = *{FILE*},
+        *{stderr} = *{FILE*},
+        *{input} = *{FILE*},
+        *{output} = *{FILE*}
+      green{}}
+
+    Returns the process ID of the newly created process.
+
+  blue{kill}(*{pid}:magenta{number}, *{signal}:magenta{number}): magenta{boolean}
+    If the current user has permission, sends the provided magenta{signal} to the process whose PID is magenta{pid}.
+
+  blue{list}(): green{table}
+    Returns a list of all process IDs.
+
+  blue{await}(*{pid}:magenta{number}): magenta{number}, red{string}
+    Halts the current process until the specified magenta{pid} no longer exists, then returns its magenta{exit status} and red{exit reason}.
+
+  blue{info}([*{pid}:magenta{number}]): green{table}
+    Returns a table of information about the process with the specified magenta{pid}, defaulting to the current process if a magenta{pid} is not specified.
+
+      green{{}
+        *{pid} = magenta{number},
+        *{name} = red{string},
+        *{waiting} = magenta{boolean},
+        *{stopped} = magenta{boolean},
+        *{deadline} = magenta{number},
+        *{n_threads} = magenta{number},
+        *{status} = red{string},
+        *{cputime} = magenta{number},
+        *{owner} = magenta{number}
+      green{}}
+
+    If the magenta{pid} points to the current process or is unspecified (and thus has defaulted to the current process), then there will be an additional green{table} field, *{data}:
+
+      green{{}
+        *{io} = green{table},
+        *{self} = *{process},
+        *{handles} = green{table},
+        *{coroutine} = green{table},
+        *{env} = green{table}
+      green{}}
+
+    Of note is green{data.env}, the process's environment.  The other methods should be fairly self-explanatory.
+
+*{SIGNALS}
+  green{process.signals} = green{{}
+    *{hangup} = magenta{number},
+    *{interrupt} = magenta{number},
+    *{kill} = magenta{number},
+    *{stop} = magenta{number},
+    *{kbdstop} = magenta{number},
+    *{continue} = magenta{number}
+  green{}}
+
+  The magenta{kill}, magenta{stop}, and magenta{continue} signals are not blockable.  All other signals may be overridden.
+
+*{COPYRIGHT}
+  Cynosure kernel copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-cynosure/issues}.

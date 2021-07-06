@@ -1,0 +1,16 @@
+*{NAME}
+  find - print a listing of all files under a subpath
+
+*{SYNOPSIS}
+  ${find} *{DIRECTORY ...}
+
+*{DESCRIPTION}
+  ${find} prints a tree of all files under each *{DIRECTORY}, with one file per line.  All printed file paths are absolute.
+
+  No command-line options are supported.
+
+*{COPYRIGHT}
+  ULOS Core Utilities copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

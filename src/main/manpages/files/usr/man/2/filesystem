@@ -1,0 +1,65 @@
+*{NAME}
+  filesystem - filesystem API
+
+*{DESCRIPTION}
+  ${filesystem} is the Cynosure-provided method of accessing any filesystem mounted to the filesystem tree.  It is similar in design to ${lfs}, though it is not exactly the same.  Some filesystem information can be had from the sysfs.
+
+  All functions will return magenta{nil} and an error message on failure.  All file paths must be absolute - see *{path}(*{3}) for some helper functions related to path manipulation in general.
+
+*{FUNCTIONS}
+  blue{open}(*{file}:red{string}[, *{mode}:red{string}]): green{table}
+    Attempts to open the provided red{file} using red{mode}.  On success, returns a table with blue{read}, blue{write}, blue{seek}, and blue{close} methods.
+
+  blue{stat}(*{file}:red{string}): green{table}
+    Returns a table of information about the provided file:
+
+      green{{}
+        *{permissions}  = magenta{number},
+        *{type}         = magenta{number},
+        *{isDirectory}  = magenta{boolean},
+        *{owner}        = magenta{number},
+        *{group}        = magenta{number},
+        *{lastModified} = magenta{number},
+        *{size}         = magenta{number}
+      green{}}
+
+    magenta{isDirectory} is primarily kept for convenience's sake and some degree of backwards compatibility.
+
+  blue{touch}(*{file}:red{string}[, *{ftype}:magenta{number}]): magenta{boolean}
+    Creates the provided red{file}, if it does not exist.  If magenta{ftype} is specified, the file will be of the specified type if supported by the filesystem.
+
+  blue{list}(*{path}:red{string}): green{table}
+    Returns a list of all files under the specified red{path}.
+  
+  blue{remove}(*{file}:red{string}): magenta{boolean}
+    Tries to remove the specified red{file} from the filesystem.  Will not be able to remove directories on most filesystems.
+
+  blue{mount}(*{node}:red{string} or green{table}, *{fstype}:magenta{number}, *{path}:red{string}): magenta{boolean}
+    Mounts the provided yellow{node} at red{path}.
+
+    If magenta{fstype} is magenta{filesystem.types.RAW}, then blue{mount} will try to automatically determine how it should tread yellow{node}.  If magenta{fstype} is magenta{filesystem.types.NODE}, blue{mount} will treat it as a filesystem node able to be directly mounted - see #{docs/fsapi.txt} for details.  Finally, if magenta{fstype} is magenta{filesystem.types.OVERLAY}, then the directory at yellow{node} will become available at red{path}.
+
+  blue{umount}(*{path}:red{string}): magenta{boolean}
+    Attempts to remove the node at *{path} from the filesystem mount tree.
+
+  blue{mounts}(): green{table}
+    Returns a list of all currently mounted filesystems, in the following format:
+      
+      green{{}
+        [*{path}:red{string}] = *{fsname}:red{string},
+        *{...}
+      green{}}
+
+*{TABLES}
+  *{filesystem.types} = green{{}
+    *{RAW} = magenta{number},
+    *{NODE} = magenta{number},
+    *{OVERLAY} = magenta{number}
+  green{}}
+    Contains all supported filesystem types.
+
+*{COPYRIGHT}
+  Cynosure kernel copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-cynosure/issues}.

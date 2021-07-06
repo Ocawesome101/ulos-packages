@@ -1,0 +1,21 @@
+*{NAME}
+  syslog - get a handle to the system log
+
+*{DESCRIPTION}
+  The ${syslog} API provides a method for userspace programs to write to the system log.  Note that system log messages will usually only appear on the first terminal registered with the system, i.e. the one on which the boot console was presented.
+
+*{FUNCTIONS}
+  blue{open}([*{pname}:red{string}]): magenta{number}
+    Returns a number which effectively acts as a file descriptor to the system log.
+
+  blue{write}(*{n}:magenta{number}, *{...}): magenta{boolean}
+    Writes the specified message to the system log, using the log descriptor magenta{n}.
+
+  blue{close}(*{n}:magenta{number}): magenta{boolean}
+    Closes (unregisters) the specified log descriptor magenta{n}.
+
+*{COPYRIGHT}
+  Cynosure kernel copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-cynosure/issues}.

@@ -1,0 +1,13 @@
+*{NAME}
+  sha3 - sha3 library
+
+*{FUNCTIONS}
+  blue{sha256}(*{data}:red{string}): red{string}
+
+  blue{sha512}(*{data}:red{string}): red{string}
+
+*{COPYRIGHT}
+  Cynosure kernel copyright (c) 2021 Ocawesome101 under the DSLv2.  SHA-3 implementation copyright (c) 2018 Phil Leblanc, from @{https://github.com/philanc/plc}
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-cynosure/issues}.

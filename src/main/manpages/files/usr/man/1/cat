@@ -1,0 +1,17 @@
+*{NAME}
+  cat - concatenate files to standard output
+
+*{SYNOPSIS}
+  ${cat} FILE1 FILE2 *{...}
+  ${cat} --help
+
+*{DESCRIPTION}
+  ${cat} concatenates files to the standard output.
+
+  For each of its arguments, ${cat} will attempt to open the file that this argument points to;  if it is not found, ${cat} will exit with an error message.  Otherwise, ${cat} will print the unmodified contents of the file to its output.
+
+*{COPYRIGHT}
+  ULOS Core Utilities copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

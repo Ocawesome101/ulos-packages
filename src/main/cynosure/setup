@@ -5,8 +5,14 @@ name="cynosure"
 path="/tmp/$name"
 
 printf "downloading source\n"
-rm -rf $path
-git clone https://github.com/$repo $path
+if ! [ -e $path ]; then
+  git clone https://github.com/$repo $path
+else
+  oldpwd=$PWD
+  cd $path
+  git pull
+  cd $oldpwd
+fi
 
 printf "downloading build agent\n"
 wget -q https://raw.githubusercontent.com/ocawesome101/oc-ulos/master/build -O $path/build

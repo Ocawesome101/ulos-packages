@@ -1,0 +1,16 @@
+*{NAME}
+  login - log into the system
+
+*{SYNOPSIS}
+  ${login}
+
+*{DESCRIPTION}
+  ${login} will ask the user for a username and a password, then execute the shell belonging to the specified user.  If the user is not found or the credentials are incorrect, ${login} will display an error message accordingly.
+
+  ${login} may only be run as root.
+
+*{COPYRIGHT}
+  ULOS Core Utilities copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

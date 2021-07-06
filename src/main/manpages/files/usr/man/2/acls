@@ -1,0 +1,35 @@
+*{NAME}
+  acls - some ACL-related data
+
+*{DESCRIPTION}
+  ${acls} is a table containing permission data for users and files.
+
+  green{{}
+    *{user} = green{{}
+      *{SUDO} = magenta{number},
+      *{MOUNT} = magenta{number},
+      *{OPEN_UNOWNED} = magenta{number},
+      *{COMPONENTS} = magenta{number},
+      *{HWINFO} = magenta{number},
+      *{SETARCH} = magenta{number},
+      *{MANAGE_USERS} = magenta{number},
+      *{BUUTADDR} = magenta{number},
+    green{}},
+    *{file} = green{{}
+      *{OWNER_READ} = magenta{number},
+      *{OWNER_WRITE} = magenta{number},
+      *{OWNER_EXEC} = magenta{number},
+      *{GROUP_READ} = magenta{number},
+      *{GROUP_WRITE} = magenta{number},
+      *{GROUP_EXEC} = magenta{number},
+      *{OTHER_READ} = magenta{number},
+      *{OTHER_WRITE} = magenta{number},
+      *{OTHER_EXEC} = magenta{number},
+    green{}}
+  green{}}
+
+*{COPYRIGHT}
+  Cynosure kernel copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-cynosure/issues}.

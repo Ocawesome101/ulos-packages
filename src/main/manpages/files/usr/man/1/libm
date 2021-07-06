@@ -1,0 +1,15 @@
+*{NAME}
+  libm - library manager
+
+*{SYNOPSIS}
+  ${libm} *{library ...}
+  ${libm} -r *{library ...}
+
+*{DESCRIPTION}
+  ${libm} is the ULOS Command-Line Library Manager.  It will load all specified libraries unless *{-r} is specified, in which case it will attempt to unload them.
+
+*{COPYRIGHT}
+  ULOS Core Utilities copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

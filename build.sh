@@ -24,7 +24,7 @@ for f in $(ls $path); do
     bash setup
     cd $opwd
   fi
-  printf "{" >> $repo/packages.list
+  printf "$f={" >> $repo/packages.list
   printf "$(cat $path/$f/info | lua -e "print((io.read('a'):gsub('\n', ',')))")mtar=\"pkg/$f.mtar\"" >> $repo/packages.list $f
   printf "}," >> $repo/packages.list
   find $path/$f/files -type f | ./mtar.lua "$path/$f/files/" > $repo/pkg/$f.mtar

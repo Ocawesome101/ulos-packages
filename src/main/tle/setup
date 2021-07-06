@@ -1,0 +1,24 @@
+#!/bin/bash
+
+repo="ocawesome101/tle"
+name="tle"
+path="/tmp/$name"
+
+printf "downloading source\n"
+if ! [ -e $path ]; then
+  git clone https://github.com/$repo $path
+else
+  oldpwd=$PWD
+  cd $path
+  git pull
+  cd $oldpwd
+fi
+
+printf "building"
+oldpwd=$PWD
+cd $path
+lua standalone.lua
+cd $oldpwd
+
+mkdir -p files/bin
+cp -rv /tmp/$name/tle files/bin/tle.lua

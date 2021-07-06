@@ -1,0 +1,14 @@
+*{NAME}
+  tokenizer - tokenization library
+
+*{DESCRIPTION}
+  This library is old, unsupported, and will not be documented.  It is used in *{sh}(*{1}) and may be removed in the future.
+
+*{FUNCTIONS}
+  -- no documentation --
+
+*{COPYRIGHT}
+  ULOS Core Libraries copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

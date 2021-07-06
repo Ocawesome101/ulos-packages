@@ -1,0 +1,4 @@
+author="Ocawesome101"
+version=1.32
+description="The ULOS Package Manager"
+dependencies={"corelibs"}

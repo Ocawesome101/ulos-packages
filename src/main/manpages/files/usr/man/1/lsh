@@ -1,0 +1,35 @@
+*{NAME}
+  lsh - the Lisp-ish Shell
+
+*{SYNOPSIS}
+  ${lsh}
+
+*{DESCRIPTION}
+  ${lsh} is the ULOS default shell.  Its syntax mirrors a Lisp much more closely than the Bourne shell.
+
+  At the core of ${lsh} is the idea of substitution - that is, substituting the output of one program as the arguments of another.  This is accomplished like a Lisp, with
+
+    ${a} (${b} *{c d}) *{e f g}
+
+  where the output of ${b} will be split by line and inserted into program ${a}'s argument list.
+
+  This principle is used to simplify ${lsh}'s prompt system - it reads the shell prompt from *{$PS1}, with the default prompt being
+
+    <(get USER)@(or (get HOSTNAME) localhost): (or (match (get PWD) "([^/]+)/?$") /)>
+
+  String literals with spaces are supported between double quotes - otherwise, ${lsh} will split tokens on whitespace.  Expressions inside *{()} are evaluated first, recursively, with the output of each subcommand split by line and passed as an argument to the main command.  Enclosing a subcommand in square brackets (*{[]}) will capture the exit status of the command rather than its output.
+
+  Variable declaration is not done through any dedicated syntax, but rather with the ${get} and ${set} builtins.
+
+    ${get} *{KEY}
+    ${set} *{KEY VALUE}
+
+  Comments are preceded by a hash-mark (*{#}) and continue until the end of the line.
+
+  ${lsh} supports shebangs of up to 32 characters in the same style as the Bourne shell.
+
+*{COPYRIGHT}
+  ULOS Core Utilities copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

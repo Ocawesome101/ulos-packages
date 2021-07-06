@@ -1,0 +1,28 @@
+*{NAME}
+  mtar - MiniTel ARchive library
+
+*{DESCRIPTION}
+  ${mtar}, the MiniTel ARchive, is a simple archive format created by magenta{Izaya}.  It is the same format used for the ULOS installer image.  See *{mtar}(*{5}) for details.
+
+*{FUNCTIONS}
+  blue{archive}(*{base}:green{FILE*}): *{stream}:green{table}
+    Returns a stream that, when fed a filename and file data, will write the file header to the provided file stream.
+
+  blue{unarchive}(*{base}:green{FILE*}): *{stream}:green{table}
+    Returns a stream that, when blue{readfile}() is called on it, will return a file name and the file's data.
+
+  The following methods are available on the green{stream} object:
+    blue{readfile}(): red{string}, red{string}
+      Returns a file name and file data for that file, read from an archive.
+
+    blue{writefile}(*{name}:red{string}, *{data}:red{string}): magenta{boolean}
+      Writes a header for the provided file name and file data to the base file stream, along with the file data.
+
+    blue{close}(): magenta{boolean}
+      Closes the base file stream.
+
+*{COPYRIGHT}
+  ULOS Core Libraries copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

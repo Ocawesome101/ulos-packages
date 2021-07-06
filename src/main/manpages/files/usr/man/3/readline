@@ -1,0 +1,24 @@
+*{NAME}
+  readline - readline implementation
+
+*{DESCRIPTION}
+  The ${readline} function provides a highly optimized and fairly intuitive form of line editing.  It is similar in style to Bash's line editing (though with a few less features) and very straightforward.
+
+  ${readline} supports text history and may be provided a prompt.
+
+*{USAGE}
+  blue{readline}(*{opts}:green{table}): red{string}
+    Reads a string from the user, and returns it.
+
+    Available green{opts}:
+      *{history}:green{table}
+        An array of history entries, with the last entry being the most recent.
+
+      *{prompt}:red{string}
+        A prompt to be written before reading input.
+
+*{COPYRIGHT}
+  ULOS Core Libraries copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

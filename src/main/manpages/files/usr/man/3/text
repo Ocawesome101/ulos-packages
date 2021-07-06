@@ -1,0 +1,32 @@
+*{NAME}
+  text - utilities for working with text
+
+*{DESCRIPTION}
+  The ${text} library contains several useful methods for working with text.
+
+*{FUNCTIONS}
+  blue{escape}(*{str}:red{string}): red{string}
+    Escape all special pattern characters in the provided red{str}.
+
+  blue{split}(*{text}:red{string}, *{split}:red{string} or green{table}): green{table}
+    Split the provided red{text} on the characters provided in *{split}.
+
+  blue{padRight}(*{n}:magenta{number}, *{text}:red{string}, *{c}:red{string}): red{string}
+    Pad the provided red{text} to magenta{n} characters, concatenating a string of repeating red{c}, of the corresponding length, to the left side of the string.
+
+  blue{padLeft}(*{n}:magenta{number}, *{text}:red{string}, *{c}:red{string}): red{string}
+    Pad the provided red{text} to magenta{n} characters, concatenating a string of repeating red{c}, of the corresponding length, to the right side of the string.
+
+  blue{mkcolumns}(*{items}:green{table}[, *{args}:green{table}]): red{string}
+    Sorts the green{items}, then columnizes them.  This is mostly intended for use in shell commands but could potentially have other uses.  Columnization is only implemented on a row-first basis.
+
+    green{args} may contain a *{maxWidth}:magenta{number} field.  This will limit the maximum row width.  If green{args}.blue{hook} exists and is a function, it will be called with each item and the text for that item replaced with the result of the hook.
+
+  blue{wrap}(*{text}:red{string}, *{width}:magenta{number}): red{string}
+    Wraps the provided red{text} to magenta{width} characters, ignoring - but preserving! - VT100 escape sequences.  Useful for determining the number of lines a piece of text will take up on screen.
+
+*{COPYRIGHT}
+  ULOS Core Libraries copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

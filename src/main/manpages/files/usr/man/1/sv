@@ -1,0 +1,25 @@
+*{NAME}
+  sv - manage services
+
+*{SYNOPSIS}
+  ${sv} [*{up}|*{down}] *{service}
+  $[sv} *{list}
+
+*{DESCRIPTION}
+  ${sv} is the ULOS service manager.  It hooks directly into Refinement's *{sv}(*{3}) API.
+
+  Commands:
+    *{up}
+      Start the specified *{service}, if it is not running.
+
+    *{down}
+      Stop the specified *{service}, if it is running.
+
+    *{list}
+      List running services.
+
+*{COPYRIGHT}
+  ULOS Core Utilities copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

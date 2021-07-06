@@ -1,0 +1,38 @@
+*{NAME}
+  config - configuration library
+
+*{DESCRIPTION}
+  *{config} is a library for generalized application configuration.  It uses configuration templates, or objects with :blue{load}() and :blue{save}() methods.
+
+*{FUNCTIONS}
+  These functions are common across all configuration templates.  All functions return magenta{nil} and an *{error}:red{string} on failure.
+
+  blue{load}(*{file}:red{string}): green{table}
+    Returns a format-specific table representation of the configuration file.
+
+  blue{save}(*{file}:red{string}, *{data}:green{table}): magenta{boolean}
+    Saves the provided green{data} to the specified red{file}.
+
+*{FORMATS}
+  The following formats are supported by the ${config} library.
+
+  *{table}
+    Serialized Lua tables.  The returned table will be identical to what is represented by the file.  Uses *{serializer}(*{3}) for saving.
+
+  *{bracket}
+    A style of configuration similar to that of the Refinement init system.  See the below example.
+
+      cyan{[header]}
+      *{key1}=magenta{value2}
+      *{key2}=yellow{"value that is a string"}
+      *{key10} = [yellow{"table"}, magenta{of},magenta{values}]
+
+    The returned table will be in the format green{{} *{header} = green{{} *{key1} = yellow{"value2"}, *{key2} = yellow{"value that is a string"}, *{key10} = green{{} yellow{"table"}, yellow{"of"}, yellow{"values"} green{}} green{}} green{}}.
+
+    Header order is not saved when reserializing.
+
+*{COPYRIGHT}
+  Config library copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

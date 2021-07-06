@@ -1,0 +1,31 @@
+*{NAME}
+  tfmt - simple colored text format
+
+*{DESCRIPTION}
+  This manual page documents the text formatting facilities used by the ${tfmt}(*{1}) command.  This format is used by all ULOS manual pages.
+
+  All color specifications are wrapped in curly brackets (*{{}*{}}), thus:
+    
+    *{color specifier}*{{}text*{}}
+
+  The following specifiers are supported:
+
+    red{red}      VT100 color 91
+    green{green}    VT100 color 92
+    yellow{yellow}   VT100 color 93
+    blue{blue}     VT100 color 94
+    magenta{magenta}  VT100 color 95
+    cyan{cyan}     VT100 color 96
+    white{white}    VT100 color 97
+    *{*}        Bold (identical to *{white})
+    ${$}        Italic (identical to ${cyan})
+    @{@}        Link (identical to @{blue})
+    #{#}        File (identical to #{yellow})
+
+  After each specifier's pair of brackets ends, the default color (VT100 color 39) will be inserted.
+
+*{COPYRIGHT}
+  Text format copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

@@ -1,0 +1,15 @@
+*{NAME}
+  size - format sizes
+
+*{DESCRIPTION}
+  ${size} is a very simple single-function library.  Provided sizes will be formatted as power-of-2 units (1024-byte KB) by default - however, this may be changed by editing the library and changing the declaration "yellow{local} *{UNIT} = magenta{1024}" on line 14.
+
+*{FUNCTIONS}
+  blue{format}(*{n}): red{string}
+    Returns the formatted size with a unit specifier (K, M, G, T, P, and E are currently supported) concatenated to it.
+
+*{COPYRIGHT}
+  ULOS Core Libraries copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

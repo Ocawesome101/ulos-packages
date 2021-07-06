@@ -1,0 +1,17 @@
+*{NAME}
+  argutil - argument parsing utilities
+
+*{DESCRIPTION}
+  ${argutil} provies a basic OpenOS-style argument parser to all programs.  It is primarily intended to prevent most programs from requiring their own argument parser.
+
+*{FUNCTIONS}
+  blue{parse}(magenta{...}): green{table}, green{table}
+    Sort the varargs into green{args} and green{opts}, then return them in that order.  This will work for most things.  When blue{parse} encounters a yellow{--}, it will stop looking for options and dump any remaining varargs into the green{args} table.
+
+    green{args} is simply an array of arguments;  green{opts} is a map, such that green{opts}[*{option}] blue{=} *{value}.
+
+*{COPYRIGHT}
+  ULOS Core Libraries copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

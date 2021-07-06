@@ -1,0 +1,21 @@
+*{NAME}
+  tfmt - format text
+
+*{SYNOPSIS}
+  ${tfmt} [*{options}] *{FILE ...}
+
+*{DESCRIPTION}
+  ${tfmt} formats text according to a simple format specification.  See *{tfmt}(*{7}) for details.
+
+  Supported options:
+    *{--wrap=N}
+      Pre-wrap the output text at *{N} characters.  If this is not specified, the output text will not be pre-wrapped.
+
+    *{--output=FILE}
+      Send output to *{FILE} rather than the standard output.
+
+*{COPYRIGHT}
+  ULOS Core Utilities copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

@@ -1,0 +1,48 @@
+*{NAME}
+  users - user management
+
+*{DESCRIPTION}
+  This API provides facilities for simple managements of users under Cynosure.
+
+  All functions return magenta{nil} and an error message on failure.
+
+*{FUNCTIONS}
+  blue{prime}(*{data}:green{table}): magenta{boolean}
+    Used internally.  Undocumented.
+
+  blue{authenticate}(*{uid}:magenta{number}, *{pass}:red{string}): magenta{boolean}
+    Checks whether the credentials provided are valid.
+
+  blue{exec_as}(*{uid}:magenta{number}, *{pass}:red{string}, *{func}:blue{function}[, *{pname}:red{string}][, *{wait}:magenta{boolean}])
+    Spawns a new process to execute the provided blue{func} as the user specified by magenta{uid}.  If red{pname} is specified the process name will be set to it, and if magenta{wait} is specified then blue{exec_as} will return the result of blue{process}(*{2})blue{.await}ing the new process.
+  
+  blue{get_uid}(*{uname}:red{string}): magenta{number}
+    Returns the user ID associated with the specified username red{uname}.
+
+  blue{attributes}(*{uid}:magenta{number}): green{table}
+    Returns the attributes of the specified magenta{uid}:
+
+      green{{}
+        *{name} = red{string},
+        *{home} = red{string},
+        *{shell} = red{string},
+        *{acls} = magenta{number}
+      green{}}
+
+    Perhaps the least self-explanatory field is magenta{acls}, which contains all the user's permissions OR'd together.
+
+  blue{usermod}(*{attributes}:green{table}): magenta{boolean}
+    Changes user attributes.  The provided table of green{attributes} should have a form identical to that returned by the blue{attributes} function, but with the ACL data as a table where [red{acl_name}] = magenta{true}, and with a UID and password field if not modifying the current user.
+
+    The specified user will be created if it does not exist.
+
+    Use of this function can be seen in *{passwd}(*{1}).
+
+  blue{remove}(*{uid}:magenta{number}): magenta{boolean}
+    Tries to remove the user whose ID is magenta{uid}.
+
+*{COPYRIGHT}
+  Cynosure kernel copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-cynosure/issues}.

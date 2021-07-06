@@ -1,0 +1,14 @@
+*{NAME}
+  clear - clear the screen
+
+*{SYNOPSIS}
+  ${clear}
+
+*{DESCRIPTION}
+  ${clear} clears the terminal screen.  No further functionality is available.
+
+*{COPYRIGHT}
+  ULOS Core Utilities copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

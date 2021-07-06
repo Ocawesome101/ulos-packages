@@ -1,0 +1,31 @@
+*{NAME}
+  shutdown - shut down or reboot
+
+*{SYNOPSIS}
+  ${shutdown} [*{options}]
+
+*{DESCRIPTION}
+  ${shutdown} will shut down or restart the system, or halt it if the operating system supports doing so, according to the options it is given.
+
+  Accepted options are listed here in order of priority.  
+
+    *{-k}
+      Send the shutdown wall message but do not act on further options.
+
+    *{-r}, *{--reboot}
+      Restart the system.
+
+    *{-h}, *{--halt}
+      Halt the system, if halting is supported.  The system may restart if halting is unsupported.
+
+    *{-p}, *{--poweroff}
+      Power off the system.
+
+*{BUGS}
+  *{-k} currently does nothing but exit, as there is no support for system wall messages.
+
+*{COPYRIGHT}
+  ULOS Core Utilities copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

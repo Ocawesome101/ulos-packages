@@ -1,0 +1,14 @@
+*{NAME}
+  file - print the type of a file
+
+*{SYNOPSIS}
+  ${file} *{FILE ...}
+
+*{DESCRIPTION}
+  For each *{FILE}, ${file} will print the type of the file (currently 'directory', 'file', and 'special' are supported).
+
+*{COPYRIGHT}
+  ULOS Core Utilities copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

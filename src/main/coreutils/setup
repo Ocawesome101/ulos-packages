@@ -1,0 +1,19 @@
+#!/bin/bash
+
+repo="ocawesome101/ulos-external"
+name="external"
+path="/tmp/$name"
+subdir="coreutils"
+
+printf "downloading source\n"
+if ! [ -e $path ]; then
+  git clone https://github.com/$repo $path
+else
+  oldpwd=$PWD
+  cd $path
+  git pull
+  cd $oldpwd
+fi
+
+mkdir -p files
+cp -rv /tmp/$name/$subdir/* files/

@@ -1,0 +1,15 @@
+*{NAME}
+  sudo - run a command as another user
+
+*{SYNOPSIS}
+  ${sudo} *{PROGRAM ...}
+  ${sudo} *{--uid=UID} *{PROGRAM ...}
+
+*{DESCRIPTION}
+  $[sudo} will execute the specified *{PROGRAM} as either the root user, or the user whose uid is specified with *{--uid}.  Note that *{--uid} must be specified as the first argument to ${sudo}, or it will not take effect.
+
+*{COPYRIGHT}
+  ULOS Core Utilities copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

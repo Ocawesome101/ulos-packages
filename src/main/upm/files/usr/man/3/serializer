@@ -1,0 +1,13 @@
+*{NAME}
+  serializer - serialize Lua tables to text
+
+*{DESCRIPTION}
+  The ${serializer} function, when given a Lua table as its only argument, will try to serialize that table into a string which can then be written to a file or blue{load}ed again.
+
+  Recursion is handled but cannot be unserialized.  Functions and threads cannot be serialized and so will break unserialization.
+
+*{COPYRIGHT}
+  Serializer library copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.
