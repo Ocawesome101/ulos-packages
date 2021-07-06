@@ -3,7 +3,11 @@
 local args, opts = require("argutil").parse(...)
 
 if #args == 0 or opts.help then
-  io.stderr:write([[]])
+  io.stderr:write([[
+usage: openos PROGRAM
+Execute PROGRAM in a partially OpenOS-compatible environment.
+]])
+  os.exit(1)
 end
 
 local env = {}
@@ -21,17 +25,17 @@ local loaded = {
   string = string,
   coroutine = coroutine,
   computer = package.loaded.computer,
-  component = package.loaded.component
+  component = package.loaded.component,
+  unicode = unicode,
+  filesystem = dofile("/usr/lib/openos/fs.lua")
 }
-
-setmetatable(env.package.loaded, {__index = package.loaded})
 
 env.package.loaded = loaded
 local loading = {}
 
-env.package.path = package.path .. ";/usr/lib/openos/?.lua"
+env.package.path = "/usr/lib/openos/?.lua;" .. package.path
 
-function _G.require(module)
+function env.require(module)
   if loaded[module] then
     return loaded[module]
   elseif not loading[module] then
@@ -60,3 +64,4 @@ function _G.require(module)
   end
 end
 
+assert(loadfile(args[1], nil, env))(table.unpack(args, 2, #args))
