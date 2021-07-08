@@ -120,23 +120,36 @@ local search, update, download, extract, install_package, install
 function search(name, re)
   if opts.v then log(pfx.info, "querying repositories for package ", name) end
   local repos = cfg.Repositories
+  local results = {}
   for k, v in pairs(repos) do
     if opts.v then log(pfx.info, "searching list ", k) end
     local data, err = config.table:load(path.concat(opts.root,
       cfg.General.dataDirectory, k .. ".list"))
     if not data then
       log(pfx.warn, "list ", k, " is nonexistent; run 'upm update' to refresh")
+      log(pfx.warn, "(err: ", err, ")")
     else
       if data.packages[name] then
-        return data.packages[name], k
+        if re then
+          results[#results+1] = {data.packages[name], k, name}
+        else
+          return data.packages[name], k
+        end
       end
       if re then
-        for k,v in pairs(data.packages) do
-          if k:match(name) then
-            return data.packages[name], k
+        for nk,v in pairs(data.packages) do
+          if nk:match(name) then
+            results[#results+1] = {data.packages[nk], k, nk}
           end
         end
       end
+    end
+  end
+  if re then
+    local i = 0
+    return function()
+      i = i + 1
+      if results[i] then return table.unpack(results[i]) end
     end
   end
   exit("package " .. name .. " not found")
@@ -342,11 +355,13 @@ elseif args[1] == "search" then
     exit("command verb 'search' requires at least one argument")
   end
   for i=2, #args, 1 do
-    local data, repo = search(args[i], true)
-    io.write("\27[94m", repo, "\27[39m/", args[i], " ",
-      installed[args[i]] and "\27[96m(installed)\27[39m" or "", "\n")
-    io.write("  \27[92mAuthor: \27[39m", data.author or "(unknown)", "\n")
-    io.write("  \27[92mDesc: \27[39m", data.description or "(no description)", "\n")
+    for data, repo, name in search(args[i], true) do
+      io.write("\27[94m", repo, "\27[39m/", name, " ",
+        installed[name] and "\27[96m(installed)\27[39m" or "", "\n")
+      io.write("  \27[92mAuthor: \27[39m", data.author or "(unknown)", "\n")
+      io.write("  \27[92mDesc: \27[39m", data.description or
+        "(no description)", "\n")
+    end
   end
 elseif args[1] == "list" then
   if args[2] == "installed" then
@@ -360,6 +375,7 @@ elseif args[1] == "list" then
         cfg.General.dataDirectory, k .. ".list"))
       if not data then
         log(pfx.warn, "list ", k, " is nonexistent; run 'upm update' to refresh")
+        log(pfx.warn, "(err: ", err, ")")
       else
         for p in pairs(data.packages) do
           print(p)
@@ -371,6 +387,7 @@ elseif args[1] == "list" then
       cfg.General.dataDirectory, args[2] .. ".list"))
     if not data then
       log(pfx.warn, "list ", args[2], " is nonexistent; run 'upm update' to refresh")
+      log(pfx.warn, "(err: ", err, ")")
     else
       for p in pairs(data.packages) do
         print(p)

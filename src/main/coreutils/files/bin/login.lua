@@ -45,6 +45,7 @@ local function main()
           motd:close()
         end
 
+        os.setenv("HOSTNAME", gethostname())
         local exit, err = users.exec_as(uid, pw, shellf, shell, true)
         if exit ~= 0 then
           print(err)

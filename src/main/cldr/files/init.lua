@@ -39,7 +39,7 @@ local cfg = {}
 do
   local data = readFile("/boot/cldr.cfg", true)
   for line in data:gmatch("[^\n]+") do
-    local word, arg = line:gmatch("([^ ]+) (.+)")
+    local word, arg = line:match("([^ ]+) (.+)")
     if word and arg then cfg[word] = tonumber(arg) or arg end
   end
 
