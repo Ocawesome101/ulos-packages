@@ -10,7 +10,7 @@ do
   rf._RUNNING_ON = "@[{os.getenv('OS')}]"
   
   io.write("\n  \27[97mWelcome to \27[93m", rf._RUNNING_ON, "\27[97m!\n\n")
-  local version = "2021.07.06"
+  local version = "2021.07.08"
   rf._VERSION = string.format("%s r%s-%s", rf._NAME, rf._RELEASE, version)
 end
 --#include "src/version.lua"
@@ -68,6 +68,22 @@ do
   end
 end
 --#include "src/require.lua"
+-- set the system hostname, if possible --
+
+rf.log(rf.prefix.green, "src/hostname")
+
+if package.loaded.network then
+  local handle, err = io.open("/etc/hostname", "r")
+  if not handle then
+    rf.log(rf.prefix.red, "cannot open /etc/hostname: ", err)
+  else
+    local data = handle:read("a"):gsub("\n", "")
+    handle:close()
+    rf.log(rf.prefix.blue, "setting hostname to ", data)
+    package.loaded.network.sethostname(data)
+  end
+end
+--#include "src/hostname.lua"
 local config = {}
 do
   rf.log(rf.prefix.blue, "Loading service configuration")
@@ -239,6 +255,18 @@ do
     for svc, proc in pairs(rf.running) do
       rf.log(rf.prefix.yellow, "INIT: Stopping service: ", svc)
       process.kill(proc)
+    end
+
+    if package.loaded.network then
+      local net = require("network")
+      if net.hostname() ~= "localhost" then
+        rf.log(rf.prefix.red, "INIT: saving hostname")
+        local handle, err = io.open("/etc/hostname", "w")
+        if handle then
+          handle:write(net.hostname())
+          handle:close()
+        end
+      end
     end
 
     rf.log(rf.prefix.red, "INIT: Requesting system shutdown")

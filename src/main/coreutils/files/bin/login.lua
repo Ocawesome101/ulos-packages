@@ -4,6 +4,9 @@ local users = require("users")
 local process = require("process")
 local readline = require("readline")
 
+local gethostname = (package.loaded.network and package.loaded.network.hostname)
+  or function() return "localhost" end
+
 if (process.info().owner or 0) ~= 0 then
   io.stderr:write("login may only be run as root!\n")
   os.exit(1)
@@ -12,7 +15,7 @@ end
 io.write("\27?0c\27[39;49m\nWelcome to ULOS.\n\n")
 
 local function main()
-  io.write("\27?0c", os.getenv("HOSTNAME") or "localhost", " login: ")
+  io.write("\27?0c", gethostname(), " login: ")
   local un = readline()
   io.write("password: \27[8m")
   local pw = io.read("l")

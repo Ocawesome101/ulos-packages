@@ -15,8 +15,8 @@ Options:
                   characters.
   --output=FILE   Send output to file FILE.
 
-ULOS Coreutils copyright (c) 2021 Ocawesome101
-under the DSLv2.
+ULOS Coreutils (c) 2021 Ocawesome101 under the
+DSLv2.
 ]])
   os.exit(1)
 end

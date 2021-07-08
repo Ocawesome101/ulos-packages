@@ -36,7 +36,7 @@ end
 do
   k._NAME = "Cynosure"
   k._RELEASE = "1.03"
-  k._VERSION = "2021.07.06-default"
+  k._VERSION = "2021.07.08-default"
   _G._OSVERSION = string.format("%s r%s-%s", k._NAME, k._RELEASE, k._VERSION)
 end
 --#include "base/version.lua"
@@ -1456,7 +1456,8 @@ do
       HWINFO = 16,
       SETARCH = 32,
       MANAGE_USERS = 64,
-      BOOTADDR = 128
+      BOOTADDR = 128,
+      HOSTNAME = 256,
     },
     file = {
       OWNER_READ = 1,
@@ -4331,6 +4332,23 @@ do
     end
 
     return protocols[proto].request(proto, rest, ...)
+  end
+
+  local hostname = "localhost"
+
+  function k.net.hostname()
+    return hostname
+  end
+
+  function k.net.sethostname(hn)
+    checkArg(1, hn, "string")
+    local perms = k.security.users.attributes(k.scheduler.info().owner).acls
+    if not k.security.acl.has_permission(perms,
+        k.security.acl.permissions.HOSTNAME) then
+      return nil, "insufficient permission"
+    end
+    hostname = hn
+    return true
   end
 
   k.hooks.add("sandbox", function()
