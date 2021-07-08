@@ -14,7 +14,7 @@ else
   cd $oldpwd
 fi
 
-printf "building"
+printf "building\n"
 oldpwd=$PWD
 cd $path
 lua standalone.lua

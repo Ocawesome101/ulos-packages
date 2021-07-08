@@ -17,7 +17,7 @@ fi
 #printf "downloading build agent\n"
 #wget -q https://raw.githubusercontent.com/ocawesome101/oc-ulos/master/build -O $path/build
 
-printf "building"
+printf "building\n"
 oldpwd=$PWD
 cd $path
 
