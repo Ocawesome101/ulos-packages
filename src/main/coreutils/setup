@@ -17,3 +17,4 @@ fi
 
 mkdir -p files
 cp -r /tmp/$name/$subdir/* files/
+rm files/bin/install.lua
