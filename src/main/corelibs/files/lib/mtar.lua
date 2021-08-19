@@ -21,59 +21,11 @@ function stream:writefile(name, data)
     .. string.pack(formats[1].len, #data) .. data)
 end
 
---[[
-function stream:readfile()
-  if self.mode ~= "r" then
-    return nil, "cannot read from write-only stream"
-  end
-
-  local namelen = (self.base:read(2) or "\0\0")
-  if #namelen == 0 then return end
-  namelen = (">I2"):unpack(namelen)
-  local version = 0
-  local to_read = 0
-  local file_path = ""
-  if namelen == 0xFFFF then
-    version = self.base:read(1):byte()
-    namelen = formats[version].name:unpack(self.base:read(2))
-  elseif namelen == 0 then
-    return nil
-  end
-
-  if not formats[version] then
-    return nil, "unsupported format version " .. version
-  end
-
-  file_path = self.base:read(namelen)
-  if #file_path ~= namelen then
-    return nil, "unexpected end-of-file reading filename from archive"
-  end
-  
-  local file_len = self.base:read(string.packsize(formats[version].len))
-  file_len = formats[version].len:unpack(file_len)
-  local file_data = self.base:read(file_len)
-  if #file_data ~= file_len then
-    return nil, string.format("unexpected end-of-file reading file from archive (expected data of length %d, but got %d)", file_len, #file_data)
-  end
-  return file_path, file_data
-end
---]]
-
 function stream:close()
   self.base:close()
 end
 
 local mtar = {}
-
---[[
-function mtar.unarchive(base)
-  checkArg(1, base, "FILE*")
-  return setmetatable({
-    base = base,
-    mode = "r",
-  }, {__index = stream})
-end
---]]
 
 -- this is Izaya's MTAR parsing code because apparently mine sucks
 -- however, this is re-indented in a sane way, with argument checking added

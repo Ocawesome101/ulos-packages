@@ -43,7 +43,7 @@ do
     if word and arg then cfg[word] = tonumber(arg) or arg end
   end
 
-  local flags = cfg.flags or "root=UUID="..computer.getBootAddress()
+  local flags = cfg.flags or "loglevel=2 root=UUID="..computer.getBootAddress()
   cfg.flags = {}
   for word in flags:gmatch("[^ ]+") do
     cfg.flags[#cfg.flags+1] = word

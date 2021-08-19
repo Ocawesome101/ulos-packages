@@ -4,7 +4,7 @@
 local pat = "^" .. (... or "out/")
 
 local function genHeader(name, len)
-  --io.stderr:write(name, "\n")
+  io.stderr:write(name, "\n")
   return string.pack(">I2I1I2", 0xFFFF, 1, #name) .. name
     .. string.pack(">I8", len)
 end

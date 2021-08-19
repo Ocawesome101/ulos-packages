@@ -1,0 +1,30 @@
+*{NAME}
+  network - Cynosure networking API
+
+*{DESCRIPTION}
+  ${network} is a simple, protocol-agnostic networking API provided by the Cynosure kernel.
+
+  The blue{socket} and blue{request} functions each take a red{url} as their first argument;  this URL *{must} be in the following format:
+
+    *{protocol}://*{specifier}
+
+  If the *{protocol} is unsupported or unspecified, the function will return an error.
+
+*{FUNCTIONS}
+  blue{socket}(*{url}:red{string}, *{...}): green{socketstream}
+    Attempts to open a TCP or TCP-like socket at the specified red{url}.
+
+  blue{request}(*{url}:red{string}, *{...}): green{request}
+    Requests the specified red{url} and returns the response as a stream.
+
+  blue{hostname}(): red{string}
+    Returns the current system hostname.
+
+  blue{sethostname}(*{name}:red{string}): magenta{boolean}
+    Sets the system hostname for this boot.  Requires the *{HOSTNAME} permission (see *{acls}(*{2})).
+
+*{COPYRIGHT}
+  Cynosure kernel copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-cynosure/issues}.

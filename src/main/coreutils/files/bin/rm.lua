@@ -39,23 +39,23 @@ local function remove(file)
 
   if not data then
     exit("cannot delete '", file, "': ", err, "\n")
-  end
-
-  if data.isDirectory and opts.r then
+  elseif data.isDirectory and opts.r then
     local files = futil.tree(abs)
     for i=#files, 1, -1 do
       remove(files[i])
     end
   end
 
-  local ok, err = filesystem.remove(abs)
-  if not ok then
-    exit("cannot delete '", file, "': ", err, "\n")
-  end
+  if data then
+    local ok, err = filesystem.remove(abs)
+    if not ok then
+      exit("cannot delete '", file, "': ", err, "\n")
+    end
 
-  if ok and opts.v then
-    io.write("removed ", data.isDirectory and "directory " or "",
-      "'", abs, "'\n")
+    if ok and opts.v then
+      io.write("removed ", data.isDirectory and "directory " or "",
+        "'", abs, "'\n")
+    end
   end
 end
 

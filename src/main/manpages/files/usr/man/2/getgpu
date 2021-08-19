@@ -1,0 +1,15 @@
+*{NAME}
+  getgpu - Get the GPU associated with a TTY
+
+*{DESCRIPTION}
+  ${getgpu} is a function optionally provided by the Cynosure kernel.  It is intended for use in GUI applications such as window managers, where VT100 capability is insufficient;  for most programs, VT100 should be used instead.
+
+*{SIGNATURE}
+  blue{getgpu}(*{ttyn}:magenta{number}): green{table}
+    Returns the GPU proxy associated with a TTY.  The ID of the current TTY is stored most reliably in green{io.stderr}.magenta{tty}, though unless program output is redirected it can be accessed through the green{stdin} and green{stdout} streams as well.
+
+*{COPYRIGHT}
+  Cynosure kernel copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-cynosure/issues}.

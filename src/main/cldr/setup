@@ -4,7 +4,7 @@ repo="ocawesome101/ulos-external/master"
 baseurl="https://raw.githubusercontent.com/$repo"
 outpath="files/"
 
-mkdir -p files
+rm -rf files && mkdir -p files
 
 download() {
   printf "downloading $baseurl/$1..."

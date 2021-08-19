@@ -13,7 +13,8 @@
       *{HWINFO} = magenta{number},
       *{SETARCH} = magenta{number},
       *{MANAGE_USERS} = magenta{number},
-      *{BUUTADDR} = magenta{number},
+      *{BOOTADDR} = magenta{number},
+      *{HOSTNAME} = magenta{number},
     green{}},
     *{file} = green{{}
       *{OWNER_READ} = magenta{number},

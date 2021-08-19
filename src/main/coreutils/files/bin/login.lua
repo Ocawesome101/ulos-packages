@@ -14,9 +14,11 @@ end
 
 io.write("\27?0c\27[39;49m\nWelcome to ULOS.\n\n")
 
+local rlops = {noexit = true}
+
 local function main()
   io.write("\27?0c", gethostname(), " login: ")
-  local un = readline()
+  local un = readline(rlops)
   io.write("password: \27[8m")
   local pw = io.read("l")
   io.write("\n\27[m\27?0c")
@@ -48,8 +50,10 @@ local function main()
         os.setenv("HOSTNAME", gethostname())
         local exit, err = users.exec_as(uid, pw, shellf, shell, true)
         if exit ~= 0 then
-          print(err)
+          print(exit, err)
         end
+
+        io.write("\n\n")
       end
     end
   end

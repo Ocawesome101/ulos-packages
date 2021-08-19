@@ -55,7 +55,7 @@
       Assume 'yes' for all prompts;  do not present prompts.
 
     *{--root}=*{PATH}
-      Specify *{PATH} to be treaded as the root directory, rather than #{/}.  This is mainly useful for bootstrapping another ULOS system, or for installing packages on another disk.
+      Specify *{PATH} to be treated as the root directory, rather than #{/}.  This is mainly useful for bootstrapping another ULOS system, or for installing packages on another disk.
 
     *{--help}
       Print the built-in help text.

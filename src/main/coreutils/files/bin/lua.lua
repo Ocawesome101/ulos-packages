@@ -68,9 +68,9 @@ if opts.i then
     io.write("> ")
     local eval = readline(rlopts)
     hist[#hist+1] = eval
-    local ok, err = load(eval, "=stdin", "bt", prog_env)
+    local ok, err = load("return "..eval, "=stdin", "bt", prog_env)
     if not ok then
-      ok, err = load("return " ..eval, "=stdin", "bt", prog_env)
+      ok, err = load(eval, "=stdin", "bt", prog_env)
     end
     if not ok then
       io.stderr:write(err, "\n")

@@ -3,10 +3,10 @@
 repo="ocawesome101/ulos-external"
 name="external"
 path="/tmp/$name"
-subdir="corelibs"
+subdir="installer"
 
 printf "downloading source\n"
-if ! [ -e $path ]; then
+if ! [ -e $path]; then
   git clone https://github.com/$repo $path
 else
   oldpwd=$PWD
@@ -15,5 +15,4 @@ else
   cd $oldpwd
 fi
 
-rm -rf files && mkdir -p files
-cp -r /tmp/$name/$subdir/* files/
+cp -rv /tmp/external/$subdir/* files/

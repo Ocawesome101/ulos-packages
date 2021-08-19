@@ -2,9 +2,13 @@
 
 local termio = require("termio")
 
+local rlid = 0
+
 local function readline(opts)
   checkArg(1, opts, "table", "nil")
   
+  local uid = rlid + 1
+  rlid = uid
   opts = opts or {}
   if opts.prompt then io.write(opts.prompt) end
 
@@ -67,7 +71,8 @@ local function readline(opts)
           buffer = buffer:sub(1, -2)
           io.write("\27[D \27[D")
         elseif cpos < #buffer then
-          buffer = buffer:sub(0, #buffer - cpos - 1) .. buffer:sub(#buffer - cpos + 1)
+          buffer = buffer:sub(0, #buffer - cpos - 1) ..
+            buffer:sub(#buffer - cpos + 1)
           local tw = buffer:sub((#buffer - cpos) + 1)
           io.write(string.format("\27[D%s \27[%dD", tw, cpos + 1))
         end
@@ -80,7 +85,8 @@ local function readline(opts)
         elseif cpos == #buffer then
           buffer = key .. buffer
         else
-          buffer = buffer:sub(1, #buffer - cpos) .. key .. buffer:sub(#buffer - cpos + 1)
+          buffer = buffer:sub(1, #buffer - cpos) .. key ..
+            buffer:sub(#buffer - cpos + 1)
         end
         if wr then
           local tw = buffer:sub(#buffer - cpos)
@@ -88,7 +94,7 @@ local function readline(opts)
         end
       end
     elseif flags.ctrl then
-      if key == "m" then
+      if key == "m" then -- enter
         if cpos > 0 then io.write(string.format("\27[%dC", cpos)) end
         io.write("\n")
         break
@@ -98,6 +104,24 @@ local function readline(opts)
       elseif key == "e" and cpos > 0 then
         io.write(string.format("\27[%dC", cpos))
         cpos = 0
+      elseif key == "d" and not opts.noexit then
+        io.write("\n")
+        os.exit()
+      elseif key == "i" then -- tab
+        if type(opts.complete) == "function" and cpos == 0 then
+          local obuffer = buffer
+          buffer = opts.complete(buffer, rlid) or buffer
+          if obuffer ~= buffer and #obuffer > 0 then
+            io.write(string.format("\27[%dD", #obuffer - cpos))
+            cpos = 0
+            local cx, cy = termio.getCursor()
+            if cy < h then
+              io.write(string.format("\27[K\27[B\27[J\27[A%s", buffer))
+            else
+              io.write(string.format("\27[K%s", buffer))
+            end
+          end
+        end
       end
     end
   end

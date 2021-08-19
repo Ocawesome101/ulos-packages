@@ -15,6 +15,6 @@ else
   cd $oldpwd
 fi
 
-mkdir -p files
+rm -rf files && mkdir -p files
 cp -r /tmp/$name/$subdir/* files/
 rm files/bin/install.lua

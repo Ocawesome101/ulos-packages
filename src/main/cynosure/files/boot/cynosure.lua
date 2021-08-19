@@ -36,7 +36,7 @@ end
 do
   k._NAME = "Cynosure"
   k._RELEASE = "1.03"
-  k._VERSION = "2021.07.10-default"
+  k._VERSION = "2021.08.19-default"
   _G._OSVERSION = string.format("%s r%s-%s", k._NAME, k._RELEASE, k._VERSION)
 end
 --#include "base/version.lua"
@@ -212,6 +212,8 @@ do
       if n == 0 then
         self.fg = colors[8]
         self.bg = colors[1]
+        self.gpu.setForeground(self.fg)
+        self.gpu.setBackground(self.bg)
         self.attributes.echo = true
       elseif n == 8 then
         self.attributes.echo = false
@@ -353,6 +355,10 @@ do
       if self.wb:find("\n") then
         local ln = self.wb:match("(.-\n)")
         self.wb = self.wb:sub(#ln + 1)
+        return self:write_str(ln)
+      elseif #self.wb > 2048 then
+        local ln = self.wb
+        self.wb = ""
         return self:write_str(ln)
       end
     else
@@ -514,26 +520,30 @@ do
           (ch == 31 and 63) or ch
         ):upper()
     
-      if sigacts[tch] and not self.disabled[tch] and k.scheduler.processes then
+      if sigacts[tch] and not self.disabled[tch] and k.scheduler.processes
+          and not self.attributes.raw then
         -- fairly stupid method of determining the foreground process:
         -- find the highest PID associated with this TTY
         -- yeah, it's stupid, but it should work in most cases.
         -- and where it doesn't the shell should handle it.
         local mxp = 0
 
-        for k, v in pairs(k.scheduler.processes) do
-          if v.io.stdout.base and v.io.stdout.base.ttyn == self.ttyn then
-            mxp = math.max(mxp, k)
-          elseif v.io.stdin.base and v.io.stdin.base.ttyn == self.ttyn then
-            mxp = math.max(mxp, k)
-          elseif v.io.stderr.base and v.io.stderr.base.ttyn == self.ttyn then
-            mxp = math.max(mxp, k)
+        for _k, v in pairs(k.scheduler.processes) do
+          --k.log(k.loglevels.error, _k, v.name)
+          if v.io.stdout.tty == self.ttyn then
+            mxp = math.max(mxp, _k)
+          elseif v.io.stdin.tty == self.ttyn then
+            mxp = math.max(mxp, _k)
+          elseif v.io.stderr.tty == self.ttyn then
+            mxp = math.max(mxp, _k)
           end
         end
 
-        --k.log(k.loglevels.info, "sending", sigacts[tch], "to", k.scheduler.processes[mxp].name)
+        --k.log(k.loglevels.error, "sending", sigacts[tch], "to", mxp == 0 and mxp or k.scheduler.processes[mxp].name)
 
-        k.scheduler.processes[mxp]:signal(sigacts[tch])
+        if mxp > 0 then
+          k.scheduler.processes[mxp]:signal(sigacts[tch])
+        end
 
         self.rb = ""
         if tch == "\4" then self.rb = tch end
@@ -578,18 +588,21 @@ do
 
     self:flush()
 
+    local dd = self.disabled.D or self.attributes.raw
+
     if self.attributes.line then
       while (not self.rb:find("\n")) or (self.rb:find("\n") < n)
-          and not self.rb:find("\4") do
+          and not (self.rb:find("\4") and not dd) do
         coroutine.yield()
       end
     else
-      while #self.rb < n and (self.attributes.raw or not self.rb:find("\4")) do
+      while #self.rb < n and (self.attributes.raw or not
+          (self.rb:find("\4") and not dd)) do
         coroutine.yield()
       end
     end
 
-    if self.rb:find("\4") then
+    if self.rb:find("\4") and not dd then
       self.rb = ""
       return nil
     end
@@ -693,6 +706,8 @@ do
       k.sysfs.register(k.sysfs.types.tty, new, "/dev/tty"..ttyn)
       new.ttyn = ttyn
     end
+
+    new.tty = ttyn
 
     if k.gpus then
       k.gpus[ttyn] = proxy
@@ -816,7 +831,7 @@ do
   end
 end
 
-k.log(k.loglevels.info, "Starting\27[93m", _OSVERSION, "\27[37m")
+k.log(math.huge, "Starting\27[93m", _OSVERSION, "\27[37m")
 --#include "base/logger.lua"
 -- kernel hooks
 
@@ -829,7 +844,7 @@ do
   function k.hooks.add(name, func)
     checkArg(1, name, "string")
     checkArg(2, func, "function")
-  
+
     hooks[name] = hooks[name] or {}
     table.insert(hooks[name], func)
   end
@@ -837,6 +852,7 @@ do
   function k.hooks.call(name, ...)
     checkArg(1, name, "string")
 
+    k.logio:write(":: calling hook " .. name .. "\n")
     if hooks[name] then
       for k, v in ipairs(hooks[name]) do
         v(...)
@@ -884,7 +900,8 @@ do
     local mt = {
       __index = tbl,
       __newindex = protecc,
-      __pairs = tbl,
+      __pairs = function() return pairs(tbl) end,
+      __ipairs = function() return ipairs(tbl) end,
       __metatable = {}
     }
   
@@ -980,11 +997,13 @@ do
       if self.closed and #self.rb == 0 then
         return nil
       end
-      while #self.rb < n and not self.closed do
-        if self.from ~= 0 then
-          k.scheduler.info().data.self.resume_next = self.from
+      if not self.closed then
+        while #self.rb < n do
+          if self.from ~= 0 then
+            k.scheduler.info().data.self.resume_next = self.from
+          end
+          coroutine.yield()
         end
-        coroutine.yield()
       end
       local data = self.rb:sub(1, n)
       self.rb = self.rb:sub(n + 1)
@@ -1009,11 +1028,13 @@ do
     end
 
     function util.make_pipe()
-      return k.create_fstream(setmetatable({
+      local new = k.create_fstream(setmetatable({
         from = 0, -- the process providing output
         to = 0, -- the process reading input
         rb = "",
       }, {__index = _pipe}), "rw")
+      new.buffer_mode = "none"
+      return new
     end
 
     k.hooks.add("sandbox", function()
@@ -2012,7 +2033,7 @@ do
     end
     
     device, err = fs.get_filesystem_driver(node)
-    if k.sysfs and not device then
+    if not device then
       local sdev, serr = k.sysfs.retrieve(node)
       if not sdev then return nil, serr end
       device, err = fs.get_filesystem_driver(sdev)
@@ -2148,6 +2169,8 @@ do
   end
 
   function os.exit(n)
+    checkArg(1, n, "number", "nil")
+    n = n or 0
     coroutine.yield("__internal_process_exit", n)
   end
 end
@@ -2562,7 +2585,7 @@ do
   }
   
   package.loaded = loaded
-  package.path = "/lib/?.lua;/lib/lib?.lua;/lib/?/init.lua"
+  package.path = "/lib/?.lua;/lib/lib?.lua;/lib/?/init.lua;/usr/lib/?.lua;/usr/lib/lib?.lua;/usr/lib/?/init.lua"
   
   local fs = k.fs.api
 
@@ -3021,7 +3044,7 @@ if (not k.cmdline.no_force_yields) then
 
   local old_load = load
 
-  local max_time = tonumber(k.cmdline.max_process_time) or 0.5
+  local max_time = tonumber(k.cmdline.max_process_time) or 0.1
 
   local function process_section(s)
     for i=1, #patterns, 1 do
@@ -3101,6 +3124,8 @@ if (not k.cmdline.no_force_yields) then
     if not ok then
       return nil, err
     end
+    
+    local ysq = {}
     return function(...)
       local last_yield = computer.uptime()
       local old_iyield = env.__internal_yield
@@ -3109,13 +3134,16 @@ if (not k.cmdline.no_force_yields) then
       env.__internal_yield = function()
         if computer.uptime() - last_yield >= max_time then
           last_yield = computer.uptime()
-          coroutine.yield(0.05)
+          local msg = table.pack(old_cyield(0.05))
+          if msg.n > 0 then ysq[#ysq+1] = msg end
         end
       end
       
       env.coroutine.yield = function(...)
         last_yield = computer.uptime()
-        coroutine.yield(...)
+        local msg = table.pack(old_cyield(...))
+        ysq[#ysq+1] = msg
+        return table.unpack(table.remove(ysq, 1))
       end
       
       local result = table.pack(ok(...))
@@ -3139,6 +3167,11 @@ do
   local old_coroutine = coroutine
   local _coroutine = {}
   _G.coroutine = _coroutine
+  if k.cmdline.no_wrap_coroutine then
+    k.hooks.add("sandbox", function()
+      k.userspace.coroutine = old_coroutine
+    end)
+  end
   
   function _coroutine.create(func)
     checkArg(1, func, "function")
@@ -3370,10 +3403,8 @@ do
     new:add_thread(args.func)
     processes[new.pid] = new
     
-    if k.sysfs then
-      assert(k.sysfs.register(k.sysfs.types.process, new, "/proc/"..math.floor(
+    assert(k.sysfs.register(k.sysfs.types.process, new, "/proc/"..math.floor(
         new.pid)))
-    end
     
     return new
   end
@@ -3474,9 +3505,8 @@ do
     end
 
     local ppt = "/proc/" .. math.floor(proc.pid)
-    if k.sysfs then
-      k.sysfs.unregister(ppt)
-    end
+    k.sysfs.unregister(ppt)
+    
     processes[proc.pid] = nil
   end
 
@@ -3810,6 +3840,7 @@ do
       read = n.read or ferr,
       write = n.write or ferr,
       seek = n.seek or ferr,
+      flush = n.flush,
       close = n.close or fclose
     }
   end
@@ -4052,7 +4083,8 @@ do
       end,
       write = function(_, d)
         return tty:write(d)
-      end
+      end,
+      flush = function() return tty:flush() end
     }
   end
 
@@ -4485,6 +4517,84 @@ do
   end)
 end
 --#include "extra/getgpu.lua"
+-- sound api v2:  emulate the sound card for everything --
+
+k.log(k.loglevels.info, "extra/sound")
+
+do
+  local api = {}
+  local tiers = {
+    internal = 0,
+    beep = 1,
+    noise = 2,
+    sound = 3,
+    [0] = "internal",
+    "beep",
+    "noise",
+    "sound"
+  }
+
+  local available = {
+    internal = 1,
+    beep = 0,
+    noise = 0,
+    sound = 0,
+  }
+
+  local proxies = {
+    internal = {
+      [computer.address()] = {
+        beep = function(tab)
+          return computer.beep(tab[1][1], tab[1][2])
+        end
+      }
+    },
+    beep = {},
+    noise = {},
+    sound = {}
+  }
+  
+  local current = "internal"
+  local caddr = computer.address()
+
+  local function component_changed(sig, addr, ctype)
+    if sig == "component_added" then
+      if tiers[ctype] and tiers[ctype] > tiers[current] then
+        current = ctype
+        available[ctype] = math.max(1, available[ctype] + 1)
+        proxies[ctype][addr] = component.proxy(addr)
+      end
+    else
+      if tiers[ctype] then
+        available[ctype] = math.min(0, available[ctype] - 1)
+        proxies[ctype][addr] = nil
+        if caddr == addr then
+          for i=#tiers, 0, -1 do
+            if available[tiers[i]] > 0 then
+              current = tiers[i]
+              caddr = next(proxies[current])
+            end
+          end
+        end
+      end
+    end
+  end
+
+  k.event.register("component_added", component_changed)
+  k.event.register("component_removed", component_changed)
+
+  local handlers = {
+    internal = {play = select(2, next(proxies.internal)).beep},
+    --#include "extra/sound/beep.lua"
+    --#include "extra/sound/noise.lua"
+    --#include "extra/sound/sound.lua"
+  }
+
+  function api.play(notes)
+    return handlers[current].play(notes)
+  end
+end
+--#include "extra/sound.lua"
 --#include "includes.lua"
 -- load /etc/passwd, if it exists
 

@@ -24,6 +24,10 @@ function handler.setRaw(_raw)
   end
 end
 
+function handler.cursorVisible(v)
+  
+end
+
 function handler.ttyIn() return isatty(0) == 1 end
 function handler.ttyOut() return isatty(1) == 1 end
 

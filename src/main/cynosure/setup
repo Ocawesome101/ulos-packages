@@ -32,5 +32,5 @@ $PREPROCESSOR init.lua kernel.lua
 
 cd $oldpwd
 
-mkdir -p files/boot
+rm -rf files && mkdir -p files/boot
 cp -v $path/kernel.lua files/boot/cynosure.lua

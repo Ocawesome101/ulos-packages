@@ -20,5 +20,5 @@ cd $path
 lua standalone.lua
 cd $oldpwd
 
-mkdir -p files/bin
+rm -rf files && mkdir -p files/bin
 cp -r /tmp/$name/tle files/bin/tle.lua

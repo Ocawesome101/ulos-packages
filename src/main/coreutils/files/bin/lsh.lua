@@ -121,7 +121,7 @@ local processCommand
 -- Call a function, return its exit status,
 -- and if 'sub' is true return its output.
 local sub = false
-local function call(name, func, args, fio)
+local function call(name, func, args, fio, nowait)
   local fauxio
   local function proc()
     local old_exit = os.exit
@@ -166,29 +166,41 @@ local function call(name, func, args, fio)
   local pid = process.spawn {
     func = proc,
     name = name,
-    stdin = io.stdin,
+    stdin = fio or io.stdin,
     stdout = fauxio or io.stdout,
     stderr = io.stderr,
-    input = io.input(),
+    input = fio or io.input(),
     output = fauxio or io.output()
   }
 
-  local exitStatus, exitReason = process.await(pid)
+  local function awaitThread()
+    local exitStatus, exitReason = process.await(pid)
 
-  if exitStatus ~= 0 and exitReason ~= "__internal_process_exit"
-      and exitReason ~= "exited" and exitReason and #exitReason > 0 then
-    io.stderr:write(name, ": ", exitReason, "\n")
-  end
+    if exitStatus ~= 0 and exitReason ~= "__internal_process_exit"
+        and exitReason ~= "exited" and exitReason and #exitReason > 0 then
+      io.stderr:write(name, ": ", exitReason, "\n")
+    end
 
-  local out
-  if fauxio then
-    out = {}
-    for line in fauxio.buffer:gmatch("[^\n]+") do
-      out[#out+1] = line
+    if not nowait then
+      local out
+      if fauxio then
+        out = {}
+        for line in fauxio.buffer:gmatch("[^\n]+") do
+          out[#out+1] = line
+          end
+      end
+
+      return exitStatus, out
     end
   end
 
-  return exitStatus, out
+  if nowait then
+    table.insert(process.info().data.self.threads,
+      coroutine.create(awaitThread))
+    return true
+  else
+    return awaitThread()
+  end
 end
 
 local shenv = process.info().data.env
@@ -313,7 +325,7 @@ Options:
 
 local shebang_pattern = "^#!(/.-)\n"
 
-local function loadCommand(path, h)
+local function loadCommand(path, h, nowait)
   local handle, err = io.open(path, "r")
   if not handle then return nil, path .. ": " .. err end
   local data = handle:read("a")
@@ -321,10 +333,10 @@ local function loadCommand(path, h)
   if data:match(shebang_pattern) then
     local shebang = data:match(shebang_pattern)
     if not shebang:match("lua") then
-      local executor = loadCommand(shebang, h)
+      local executor = loadCommand(shebang, h, nowait)
       return function(...)
         return call(table.concat({shebang, path, ...}, " "), executor,
-          {path, ...}, h)
+          {path, ...}, h, nowait)
       end
     else
       data = data:gsub(shebang_pattern, "")
@@ -340,7 +352,7 @@ local extensions = {
   "lsh"
 }
 
-local function resolveCommand(cmd, h)
+local function resolveCommand(cmd, h, nowait)
   local path = os.getenv("PATH")
 
   local ogcmd = cmd
@@ -351,24 +363,24 @@ local function resolveCommand(cmd, h)
 
   local try = paths.canonical(cmd)
   if fs.stat(try) then
-    return loadCommand(try, h)
+    return loadCommand(try, h, nowait)
   end
 
   for k, v in pairs(extensions) do
     if fs.stat(try .. "." .. v) then
-      return loadCommand(try .. "." .. v, h)
+      return loadCommand(try .. "." .. v, h, nowait)
     end
   end
 
   for search in path:gmatch("[^:]+") do
     local try = paths.canonical(paths.concat(search, cmd))
     if fs.stat(try) then
-      return loadCommand(try, h)
+      return loadCommand(try, h, nowait)
     end
 
     for k, v in pairs(extensions) do
       if fs.stat(try .. "." .. v) then
-        return loadCommand(try .. "." .. v)
+        return loadCommand(try .. "." .. v, nowait)
       end
     end
   end
@@ -379,15 +391,15 @@ end
 local defined = {}
 
 local processTokens
-local function eval(set, h)
+local function eval(set, h, n)
   local osb = sub
   sub = set.getOutput or sub
-  local ok, err = processTokens(set, false, h)
+  local ok, err = processTokens(set, false, h, n)
   sub = osb
   return ok, err
 end
 
-processTokens = function(tokens, noeval, handle)
+processTokens = function(tokens, noeval, handle, nowait)
   local sequence = {}
 
   if not tokens.next then tokens = setmetatable({i=1,tokens=tokens},
@@ -421,24 +433,24 @@ processTokens = function(tokens, noeval, handle)
     defined[sequence[2]] = sequence[3]
     sequence = ""
   elseif sequence[1] == "if" then
-    local ok, err = eval(sequence[2], handle)
+    local ok, err = eval(sequence[2], handle, nowait)
     if not ok then return nil, err end
     local _ok, _err
     if err == 0 then
-      _ok, _err = eval(sequence[3], handle)
+      _ok, _err = eval(sequence[3], handle, nowait)
     elseif sequence[4] then
-      _ok, _err = eval(sequence[4], handle)
+      _ok, _err = eval(sequence[4], handle, nowait)
     else
       _ok = ""
     end
     return _ok, _err
   elseif sequence[1] == "for" then
-    local iter, err = eval(sequence[3], handle)
+    local iter, err = eval(sequence[3], handle, nowait)
     if not iter then return nil, err end
     local result = {}
     for i, v in ipairs(iter) do
       shenv[sequence[2]] = v
-      local ok, _err = eval(sequence[4], handle)
+      local ok, _err = eval(sequence[4], handle, nowait)
       if not ok then return nil, _err end
       result[#result+1] = ok
     end
@@ -447,11 +459,11 @@ processTokens = function(tokens, noeval, handle)
   else
     for i=1, #sequence, 1 do
       if type(sequence[i]) == "table" then
-        local ok, err = eval(sequence[i], handle)
+        local ok, err = eval(sequence[i], handle, nowait)
         if not ok then return nil, err end
         sequence[i] = ok
       elseif defined[sequence[i]] then
-        local ok, err = eval(defined[sequence[i]], handle)
+        local ok, err = eval(defined[sequence[i]], handle, nowait)
         if not ok then return nil, err end
         sequence[i] = ok
       end
@@ -475,11 +487,11 @@ processTokens = function(tokens, noeval, handle)
     -- now, execute it
     local name = sequence[1]
     if not name then return true end
-    local ok, err = resolveCommand(table.remove(sequence, 1), handle)
+    local ok, err = resolveCommand(table.remove(sequence, 1), handle, nowait)
     if not ok then return nil, err end
     local old = sub
     sub = sequence.getOutput or sub
-    local ex, out = call(name, ok, sequence, handle)
+    local ex, out = call(name, ok, sequence, handle, nowait)
     sub = old
 
     if out then
@@ -492,11 +504,11 @@ processTokens = function(tokens, noeval, handle)
   return sequence
 end
 
-processCommand = function(text, ne, h)
+processCommand = function(text, ne, h, nowait)
   -- TODO: do this correctly
   local result = {}
   for chunk in text:gmatch("[^;]+") do 
-    result = table.pack(processTokens(tokenize(chunk), ne, h))
+    result = table.pack(processTokens(tokenize(chunk), ne, h, nowait))
   end
   return table.unpack(result)
 end
@@ -520,18 +532,19 @@ io.popen = function(command, mode)
   assert(mode == "r" or mode == "w", "bad mode to io.popen")
 
   local handle = pipe.create()
+  handle.buffer_mode = "none"
 
-  processCommand(command)
+  processCommand(command, false, handle, true)
 
   return handle
 end
 
 local history = {}
 local rlopts = {
-  history = history
+  history = history,
 }
 while true do
-  io.write("\27[0m\27?0c", processPrompt(os.getenv("PS1")))
+  io.write("\27[0m\27?0c\27?0s", processPrompt(os.getenv("PS1")))
   local command = readline(rlopts)
   history[#history+1] = command
   if #history > 32 then

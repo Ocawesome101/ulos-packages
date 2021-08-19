@@ -15,7 +15,7 @@ function lib.setCursor(x, y)
   io.write(string.format("\27[%d;%dH", y, x))
 end
 
-function lib.getCursor(x, y)
+function lib.getCursor()
   if not (getHandler().ttyIn() and getHandler().ttyOut()) then
     return 1, 1
   end
@@ -46,6 +46,10 @@ function lib.getTermSize()
   return w, h
 end
 
+function lib.cursorVisible(vis)
+  getHandler().cursorVisible(vis)
+end
+
 ----------------- Keyboard input -----------------
 local patterns = {}
 
@@ -59,7 +63,11 @@ local substitutions = {
 }
 
 local function getChar(char)
-  return string.char(96 + char:byte())
+  local byte = string.unpack("<I"..#char, char)
+  if byte + 96 > 255 then
+    return utf8.char(byte)
+  end
+  return string.char(96 + byte)
 end
 
 function lib.readKey()

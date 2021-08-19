@@ -1,0 +1,35 @@
+*{NAME}
+  sysfs - a pseudo-filesystem containing certain runtime kernel data
+
+*{DESCRIPTION}
+  The ${sysfs} filesystem (mounted at #{/sys}) is a pseudo-filesystem which contains certain volatile kernel data.  It is a combination of Linux's #{/proc}, #{/sys}, and #{/dev} rolled into one (with #{/proc} at #{/sys/proc} and #{/dev} at #{/sys/dev}).  There is also #{/sys/components}, which contains certain component access points.
+
+*{PROCESSES}
+  Public process data can be accessed through #{/sys/proc/}magenta{PID} (for example, ${init}'s process data can be accessed under #{/sys/proc/1}).  This process data consists of the following files:
+
+    #{cputime}    CPU time consumed by the process.  Somewhat inaccurate.
+    #{deadline}   The process-specific resume deadline.
+    #{name}       The process name.
+    #{owner}      UID of the process's owner.
+    #{status}     Process status (usually red{waiting} when read by another process).
+    #{stopped}    Whether the process has been stopped through the *{STOP} signal.
+    #{threads}    The number of threads belonging to the process.
+    #{waiting}    Whether the process is waiting for something.
+    #{handles/}   Directory containing all the process's handles.
+
+*{DEVICES}
+  Virtual devices (mostly I/O streams) are accessible in #{/sys/dev}.  It is on the *{ttyN} devices that Refinement spawns each initial ${login} process.
+
+*{COMPONENTS}
+  A basic component interface is accessible under #{/sys/components}.  Components are further filtered into #{by-address} and #{by-type} categories.  From #{by-type}, the third GPU detected by the system is accessible under #{/gpu/3}.  If that GPU's address is red{425fae}, then it is also accessible under #{by-address/425fa3}.
+
+  Each component node will contain at least the #{address}, #{slot}, and #{type} fields, corresponding to the relevant *{component} API calls.  If the component is explicitly supported by the kernel driver, there may be additional files corresponding to certain component calls for that component.
+
+*{FILESYSTEMS}
+  Filesystem mount information can be obtained through reading #{/sys/mounts}.
+
+*{COPYRIGHT}
+  Cynosure kernel copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-cynosure/issues}.

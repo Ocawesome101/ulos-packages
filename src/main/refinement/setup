@@ -33,6 +33,6 @@ $PREPROCESSOR init.lua refinement.lua
 
 cd $oldpwd
 
-mkdir -p files/sbin
+rm -rf files && mkdir -p files/sbin
 cp -v $path/refinement.lua files/sbin/init.lua
-cp -r /tmp/external/coresvc/* files/*/
+cp -r /tmp/external/coresvc/* files/

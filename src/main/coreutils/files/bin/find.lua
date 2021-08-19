@@ -5,7 +5,7 @@ local futil = require("futil")
 
 local args, opts = require("argutil").parse(...)
 
-if opts.help then
+if #args == 0 or opts.help then
   io.stderr:write([[
 usage: find DIRECTORY ...
 Print a tree of all files in DIRECTORY.  All

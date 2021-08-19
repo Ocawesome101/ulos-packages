@@ -1,0 +1,19 @@
+*{NAME}
+  edit - simple text editor
+
+*{SYNOPSIS}
+  ${edit} *{FILE}
+
+*{DESCRIPTION}
+  ${edit} is a basic, highly optimized text editor intended for use where TLE is either not available or too slow.  Its design is intentionally similar to OpenOS's *{edit}, while being only marginally slower (and much faster than Plan9k's *{edit}).
+
+*{BUGS}
+  Lines longer than the screen width will break line editing.
+
+  The bottom bar will sometimes scroll up with the text.  This is purely visual.
+
+*{COPYRIGHT}
+  ULOS Core Utilities copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

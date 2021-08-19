@@ -1,21 +1,19 @@
 -- UPM: the ULOS Package Manager --
 
-local fs = require("filesystem")
-local path = require("path")
-local tree = require("futil").tree
-local mtar = require("mtar")
 local config = require("config")
-local network = require("network")
-local filetypes = require("filetypes")
+local path = require("path")
+local upm = require("upm")
 
 local args, opts = require("argutil").parse(...)
 
-local cfg = config.bracket:load("/etc/upm.cfg") or {}
+local cfg = config.bracket:load("/etc/upm.cfg") or
+  {__load_order={"General","Repositories"}}
 
-cfg.General = cfg.General or {}
+cfg.General = cfg.General or {__load_order={"dataDirectory","cacheDirectory"}}
 cfg.General.dataDirectory = cfg.General.dataDirectory or "/etc/upm"
 cfg.General.cacheDirectory = cfg.General.cacheDirectory or "/etc/upm/cache"
-cfg.Repositories = cfg.Repositories or {main = "https://oz-craft.pickardayune.com/upm/main/"}
+cfg.Repositories = cfg.Repositories or {__load_order={"main"},
+  main = "https://oz-craft.pickardayune.com/upm/main/"}
 
 config.bracket:save("/etc/upm.cfg", cfg)
 
@@ -29,6 +27,8 @@ os.execute("mkdir -p " .. path.concat(opts.root, cfg.General.cacheDirectory))
 if opts.root ~= "/" then
   config.bracket:save(path.concat(opts.root, "/etc/upm.cfg"), cfg)
 end
+
+upm.preload(cfg, opts)
 
 local usage = "\
 UPM - the ULOS Package Manager\
@@ -92,216 +92,6 @@ local function exit(reason)
   os.exit(1)
 end
 
-local installed, ipath
-do
-  ipath = path.concat(opts.root, cfg.General.dataDirectory, "installed.list")
-
-  local ilist = path.concat(opts.root, cfg.General.dataDirectory, "installed.list")
-  
-  if not fs.stat(ilist) then
-    local handle, err = io.open(ilist, "w")
-    if not handle then
-      exit("cannot create installed.list: " .. err)
-    end
-    handle:write("{}")
-    handle:close()
-  end
-
-  local inst, err = config.table:load(ipath)
-
-  if not inst and err then
-    exit("cannot open installed.list: " .. err)
-  end
-  installed = inst
-end
-
-local search, update, download, extract, install_package, install
-
-function search(name, re)
-  if opts.v then log(pfx.info, "querying repositories for package ", name) end
-  local repos = cfg.Repositories
-  local results = {}
-  for k, v in pairs(repos) do
-    if opts.v then log(pfx.info, "searching list ", k) end
-    local data, err = config.table:load(path.concat(opts.root,
-      cfg.General.dataDirectory, k .. ".list"))
-    if not data then
-      log(pfx.warn, "list ", k, " is nonexistent; run 'upm update' to refresh")
-      log(pfx.warn, "(err: ", err, ")")
-    else
-      if data.packages[name] then
-        if re then
-          results[#results+1] = {data.packages[name], k, name}
-        else
-          return data.packages[name], k
-        end
-      end
-      if re then
-        for nk,v in pairs(data.packages) do
-          if nk:match(name) then
-            results[#results+1] = {data.packages[nk], k, nk}
-          end
-        end
-      end
-    end
-  end
-  if re then
-    local i = 0
-    return function()
-      i = i + 1
-      if results[i] then return table.unpack(results[i]) end
-    end
-  end
-  exit("package " .. name .. " not found")
-end
-
-function update()
-  log(pfx.info, "refreshing package lists")
-  local repos = cfg.Repositories
-  for k, v in pairs(repos) do
-    log(pfx.info, "refreshing list: ", k)
-    local url = v .. "/packages.list"
-    download(url, path.concat(opts.root, cfg.General.dataDirectory, k .. ".list"))
-  end
-end
-
-function download(url, dest)
-  log(pfx.warn, "downloading ", url, " as ", dest)
-  local out, err = io.open(dest, "w")
-  if not out then
-    exit(dest .. ": " .. err)
-  end
-
-  local handle, err = network.request(url)
-  if not handle then
-    out:close() -- just in case
-    exit(err)
-  end
-
-  repeat
-    local chunk = handle:read(2048)
-    if chunk then out:write(chunk) end
-  until not chunk
-  handle:close()
-  out:close()
-end
-
-function extract(package)
-  log(pfx.info, "extracting ", package)
-  local base, err = io.open(package, "r")
-  if not base then
-    exit(package .. ": " .. err)
-  end
-  local files = {}
-  for file, diter, len in mtar.unarchive(base) do
-    files[#files+1] = file
-    if opts.v then
-      log("  ", pfx.info, "extract file: ", file, " (length ", len, ")")
-    end
-    local absolute = path.concat(opts.root, file)
-    local segments = path.split(absolute)
-    for i=1, #segments - 1, 1 do
-      local create = table.concat(segments, "/", 1, i)
-      if not fs.stat(create) then
-        local ok, err = fs.touch(create, filetypes.directory)
-        if not ok and err then
-          log(pfx.err, "failed to create directory " .. create .. ": " .. err)
-          exit("leaving any already-created files - manual cleanup may be required!")
-        end
-      end
-    end
-    if opts.v then
-      log("   ", pfx.info, "writing to: ", absolute)
-    end
-    local handle, err = io.open(absolute, "w")
-    if not handle then
-      exit(absolute .. ": " .. err)
-    end
-    while true do
-      local chunk = diter(math.min(len, 2048))
-      if not chunk then break end
-      handle:write(chunk)
-    end
-    handle:close()
-  end
-  base:close()
-  log(pfx.info, "ok")
-  return files
-end
-
-function install_package(name)
-  local data, err = search(name)
-  if not data then
-    exit("failed reading metadata for package " .. name .. ": " .. err)
-  end
-  local files = extract(path.concat(opts.root, cfg.General.cacheDirectory, name .. ".mtar"))
-  installed[name] = {info = data, files = files}
-end
-
-local function dl_pkg(name, repo, data)
-  download(cfg.Repositories[repo] .. data.mtar,
-    path.concat(opts.root, cfg.General.cacheDirectory, name .. ".mtar"))
-end
-
-local function install(packages)
-  if #packages == 0 then
-    exit("no packages to install")
-  end
-  
-  local to_install = {}
-  local resolve, resolving = nil, {}
-  resolve = function(pkg)
-    local data, repo = search(pkg)
-    if installed[pkg] and installed[pkg].info.version >= data.version
-        and not opts.f then
-      log(pfx.err, pkg .. ": package is already installed")
-    elseif resolving[pkg] then
-      log(pfx.warn, pkg .. ": circular dependency detected")
-    else
-      to_install[pkg] = {data = data, repo = repo}
-      if data.dependencies then
-        local orp = resolving[pkg]
-        resolving[pkg] = true
-        for i, dep in pairs(data.dependencies) do
-          resolve(dep)
-        end
-        resolving[pkg] = orp
-      end
-    end
-  end
-
-  log(pfx.info, "resolving dependencies")
-  for i=1, #packages, 1 do
-    resolve(packages[i])
-  end
-
-  log(pfx.info, "packages to install: ")
-  for k in pairs(to_install) do
-    io.write(k, "  ")
-  end
-  
-  if not opts.y then
-    io.write("\n\nContinue? [Y/n] ")
-    repeat
-      local c = io.read("l")
-      if c == "n" then os.exit() end
-      if c ~= "y" and c ~= "" then io.write("Please enter 'y' or 'n': ") end
-    until c == "y" or c == ""
-  end
-
-  log(pfx.info, "downloading packages")
-  for k, v in pairs(to_install) do
-    dl_pkg(k, v.repo, v.data)
-  end
-
-  log(pfx.info, "installing packages")
-  for k in pairs(to_install) do
-    install_package(k)
-  end
-
-  config.table:save(ipath, installed)
-end
-
 if opts.help or args[1] == "help" then
   io.stderr:write(usage)
   os.exit(1)
@@ -311,91 +101,38 @@ if #args == 0 then
   exit("an operation is required; see 'upm --help'")
 end
 
+local installed = upm.installed
+
+cfg.__load_order = nil
+for k,v in pairs(cfg) do v.__load_order = nil end
+
 if args[1] == "install" then
   if not args[2] then
     exit("command verb 'install' requires at least one argument")
   end
   
   table.remove(args, 1)
-  install(args)
+  upm.install(cfg, opts, args)
 elseif args[1] == "upgrade" then
-  local to_upgrade = {}
-  for k, v in pairs(installed) do
-    local data, repo = search(k)
-    if not (installed[k] and installed[k].info.version >= data.version
-        and not opts.f) then
-      log(pfx.info, "updating ", k)
-      to_upgrade[#to_upgrade+1] = k
-    end
-  end
-  install(to_upgrade)
+  upm.upgrade(cfg, opts)
 elseif args[1] == "remove" then
   if not args[2] then
     exit("command verb 'remove' requires at least one argument")
   end
-  local rm = assert(loadfile("/bin/rm.lua"))
-  for i=2, #args, 1 do
-    local ent = installed[args[i]]
-    if not ent then
-      log(pfx.err, "package ", args[i], " is not installed")
-    else
-      log(pfx.info, "removing files")
-      for i, file in ipairs(ent.files) do
-        rm("-rf", path.concat(opts.root, file))
-      end
-      log(pfx.info, "unregistering package")
-      installed[args[i]] = nil
-    end
-  end
-  config.table:save(ipath, installed)
+
+  table.remove(args, 1)
+  upm.remove(cfg, opts, args)
 elseif args[1] == "update" then
-  update()
+  upm.update(cfg, opts)
 elseif args[1] == "search" then
   if not args[2] then
     exit("command verb 'search' requires at least one argument")
   end
-  for i=2, #args, 1 do
-    for data, repo, name in search(args[i], true) do
-      io.write("\27[94m", repo, "\27[39m/", name, " ",
-        installed[name] and "\27[96m(installed)\27[39m" or "", "\n")
-      io.write("  \27[92mAuthor: \27[39m", data.author or "(unknown)", "\n")
-      io.write("  \27[92mDesc: \27[39m", data.description or
-        "(no description)", "\n")
-    end
-  end
+  table.remove(args, 1)
+  upm.cli_search(cfg, opts, args)
 elseif args[1] == "list" then
-  if args[2] == "installed" then
-    for k in pairs(installed) do
-      print(k)
-    end
-  elseif args[2] == "all" or not args[2] then
-    for k, v in pairs(cfg.Repositories) do
-      if opts.v then log(pfx.info, "searching list ", k) end
-      local data, err = config.table:load(path.concat(opts.root,
-        cfg.General.dataDirectory, k .. ".list"))
-      if not data then
-        log(pfx.warn, "list ", k, " is nonexistent; run 'upm update' to refresh")
-        log(pfx.warn, "(err: ", err, ")")
-      else
-        for p in pairs(data.packages) do
-          print(p)
-        end
-      end
-    end
-  elseif cfg.Repositories[args[2]] then
-    local data, err = config.table:load(path.concat(opts.root,
-      cfg.General.dataDirectory, args[2] .. ".list"))
-    if not data then
-      log(pfx.warn, "list ", args[2], " is nonexistent; run 'upm update' to refresh")
-      log(pfx.warn, "(err: ", err, ")")
-    else
-      for p in pairs(data.packages) do
-        print(p)
-      end
-    end
-  else
-    exit("cannot determine target '" .. args[2] .. "'")
-  end
+  table.remove(args, 1)
+  upm.cli_list(cfg, opts, args)
 else
   exit("operation '" .. args[1] .. "' is unrecognized")
 end

@@ -12,6 +12,10 @@ function handler.setRaw(raw)
   end
 end
 
+function handler.cursorVisible(v)
+  io.write(v and "\27?4c" or "\27?14c")
+end
+
 function handler.ttyIn()
   return not not io.input().tty
 end

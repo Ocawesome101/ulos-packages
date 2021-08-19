@@ -1,0 +1,39 @@
+*{NAME}
+  sv - manage services
+
+*{SYNOPSIS}
+  ${sv} [*{up}|*{down}|*{enable}|*{disable}] *{service}
+  ${sv} *{add} [*{script}|*{service}] *{name} *{file}
+  ${sv} *{del service}
+  ${sv} *{list}
+
+*{DESCRIPTION}
+  ${sv} is the ULOS service manager.  It hooks directly into Refinement's *{sv}(*{3}) API.
+
+  Commands:
+    *{up}
+      Start the specified *{service}, if it is not running.
+
+    *{down}
+      Stop the specified *{service}, if it is running.
+
+    *{enable}
+      Enable the specified *{service} to run on system startup.
+
+    *{disable}
+      Disable the specified *{service} from running on system startup.
+
+    *{add}
+      Add a script or service of the specified *{name}, whose file is specified by the provided *{file} argument, to the Refinement configuration.
+
+    *{del}
+      Remove a script or service from the Refinement configuration entirely.
+
+    *{list}
+      List running services.
+
+*{COPYRIGHT}
+  ULOS Core Utilities copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

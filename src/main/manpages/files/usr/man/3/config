@@ -29,8 +29,6 @@
 
     The returned table will be in the format green{{} *{header} = green{{} *{key1} = yellow{"value2"}, *{key2} = yellow{"value that is a string"}, *{key10} = green{{} yellow{"table"}, yellow{"of"}, yellow{"values"} green{}} green{}} green{}}.
 
-    Header order is not saved when reserializing.
-
 *{COPYRIGHT}
   Config library copyright (c) 2021 Ocawesome101 under the DSLv2.
 

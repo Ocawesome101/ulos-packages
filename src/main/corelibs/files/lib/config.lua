@@ -47,12 +47,16 @@ lib.bracket = {new=new}
 
 local patterns = {
   bktheader = "^%[([%w_-]+)%]$",
-  bktkeyval = "^([%w_-]+)=(.+)",
+  bktkeyval = "^([%w_-]+) ?= ?(.+)",
 }
 
 local function pval(v)
   if v:sub(1,1):match("[\"']") and v:sub(1,1) == v:sub(-1) then
     v = v:sub(2,-2)
+  elseif v == "true" then
+    v = true
+  elseif v == "false" then
+    v = false
   else
     v = tonumber(v) or v
   end
@@ -65,21 +69,26 @@ function lib.bracket:load(file)
   if not handle then return nil, err end
   local cfg = {}
   local header
+  cfg.__load_order = {}
   for line in handle:lines("l") do
     if line:match(patterns.bktheader) then
       header = line:match(patterns.bktheader)
-      cfg[header] = {}
+      cfg[header] = {__load_order = {}}
+      cfg.__load_order[#cfg.__load_order + 1] = header
     elseif line:match(patterns.bktkeyval) and header then
       local key, val = line:match(patterns.bktkeyval)
       if val:sub(1,1)=="[" and val:sub(-1)=="]" then
         local _v = val:sub(2,-2)
         val = {}
-        for _val in _v:gmatch("[^,]+") do
-          val[#val+1] = pval(_val)
+        if #_v > 0 then
+          for _val in _v:gmatch("[^,]+") do
+            val[#val+1] = pval(_val)
+          end
         end
       else
         val = pval(val)
       end
+      cfg[header].__load_order[#cfg[header].__load_order + 1] = key
       cfg[header][key] = val
     end
   end
@@ -91,9 +100,12 @@ function lib.bracket:save(file, cfg)
   checkArg(1, file, "string")
   checkArg(2, cfg, "table")
   local data = ""
-  for k, v in pairs(cfg) do
+  for ind, head in ipairs(cfg.__load_order) do
+    local k, v = head, cfg[head]
     data = data .. string.format("%s[%s]", #data > 0 and "\n\n" or "", k)
-    for _k, _v in pairs(v) do
+    for _i, _hd in ipairs(v.__load_order) do
+    --for _k, _v in pairs(v) do
+      local _k, _v = _hd, v[_hd]
       data = data .. "\n" .. _k .. "="
       if type(_v) == "table" then
         data = data .. "["
@@ -101,7 +113,7 @@ function lib.bracket:save(file, cfg)
           data = data .. serializer(vv) .. (kk < #_v and "," or "")
         end
         data = data .. "]"
-      elseif _v then
+      else
         data = data .. serializer(_v)
       end
     end
