@@ -135,11 +135,6 @@ local function call(name, func, args, fio, nowait)
 
     os.execute = processCommand
 
-    if fauxio then
-      io.output(fauxio)
-      io.stdout = fauxio
-    end
-
     local ok, err, ret = xpcall(func, debug.traceback, table.unpack(args))
 
     if (not ok and err) or (not err and ret) then
@@ -537,6 +532,14 @@ io.popen = function(command, mode)
   processCommand(command, false, handle, true)
 
   return handle
+end
+
+if opts.exec then
+  local ok, err = processCommand(opts.exec)
+  if not ok and err then
+    io.stderr:write(err, "\n")
+  end
+  os.exit()
 end
 
 local history = {}

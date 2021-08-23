@@ -36,7 +36,7 @@ end
 do
   k._NAME = "Cynosure"
   k._RELEASE = "1.03"
-  k._VERSION = "2021.08.19-default"
+  k._VERSION = "2021.08.23-default"
   _G._OSVERSION = string.format("%s r%s-%s", k._NAME, k._RELEASE, k._VERSION)
 end
 --#include "base/version.lua"
@@ -82,13 +82,13 @@ do
     
     while self.cy < 1 do
       self.cy = self.cy + 1
-      self.gpu.copy(1, 1, self.w, self.h, 0, 1)
+      self.gpu.copy(1, 1, self.w, self.h - 1, 0, 1)
       self.gpu.fill(1, 1, self.w, 1, " ")
     end
     
     while self.cy > self.h do
       self.cy = self.cy - 1
-      self.gpu.copy(1, 1, self.w, self.h, 0, -1)
+      self.gpu.copy(1, 2, self.w, self.h, 0, -1)
       self.gpu.fill(1, self.h, self.w, 1, " ")
     end
   end
@@ -160,6 +160,20 @@ do
   function commands:D(args)
     local n = math.max(args[1] or 0, 1)
     self.cx = self.cx - n
+  end
+
+  -- incompatibility: terminal-specific command for calling advanced GPU
+  -- functionality
+  function commands:g(args)
+    if #args < 1 then return end
+    local cmd = table.remove(args, 1)
+    if cmd == 0 then
+      if #args < 4 then return end
+      args[1] = math.max(1, math.min(args[1], self.w))
+      args[2] = math.max(1, math.min(args[2], self.h))
+      self.gpu.fill(args[1], args[2], args[3], args[4], " ")
+    end
+    -- TODO more commands
   end
 
   function commands:G()
@@ -267,9 +281,13 @@ do
   --   - 1: enable echo
   --   - 2: enable line mode
   --   - 3: enable raw mode
+  --   - 4: show cursor
+  --   - 5: undo 15
   --   - 11: disable echo
   --   - 12: disable line mode
   --   - 13: disable raw mode
+  --   - 14: hide cursor
+  --   - 15: disable all input and output
   function control:c(args)
     args[1] = args[1] or 0
     
@@ -297,6 +315,8 @@ do
         self.attributes.raw = true
       elseif n == 4 then
         self.attributes.cursor = true
+      elseif n == 5 then
+        self.attributes.xoff = false
       elseif n == 11 then
         self.attributes.echo = false
       elseif n == 12 then
@@ -305,6 +325,8 @@ do
         self.attributes.raw = false
       elseif n == 14 then
         self.attributes.cursor = false
+      elseif n == 15 then
+        self.attributes.xoff = true
       end
     end
   end
@@ -530,11 +552,11 @@ do
 
         for _k, v in pairs(k.scheduler.processes) do
           --k.log(k.loglevels.error, _k, v.name)
-          if v.io.stdout.tty == self.ttyn then
+          if v.io.stderr.tty == self.ttyn then
             mxp = math.max(mxp, _k)
           elseif v.io.stdin.tty == self.ttyn then
             mxp = math.max(mxp, _k)
-          elseif v.io.stderr.tty == self.ttyn then
+          elseif v.io.stdout.tty == self.ttyn then
             mxp = math.max(mxp, _k)
           end
         end
@@ -568,11 +590,13 @@ do
       end
     end
     
-    if self.attributes.echo then
+    if self.attributes.echo and not self.attributes.xoff then
       self:write_str(tw or "")
     end
     
-    self.rb = string.format("%s%s", self.rb, char)
+    if not self.attributes.xoff then
+      self.rb = string.format("%s%s", self.rb, char)
+    end
   end
 
   function _stream:clipboard(...)
@@ -609,7 +633,6 @@ do
 
     local data = self.rb:sub(1, n)
     self.rb = self.rb:sub(n + 1)
-    -- component.invoke(component.list("ocemu")(), "log", '"'..data..'"', #data)
     return data
   end
 
@@ -618,6 +641,7 @@ do
   end
 
   function _stream:close()
+    self:flush()
     self.closed = true
     self.read = closed
     self.write = closed
@@ -634,12 +658,18 @@ do
   -- this is the raw function for creating TTYs over components
   -- userspace gets somewhat-abstracted-away stuff
   function k.create_tty(gpu, screen)
-    checkArg(1, gpu, "string")
-    checkArg(2, screen, "string")
+    checkArg(1, gpu, "string", "table")
+    checkArg(2, screen, "string", "nil")
 
-    local proxy = component.proxy(gpu)
+    local proxy
+    if type(gpu) == "string" then
+      proxy = component.proxy(gpu)
 
-    proxy.bind(screen)
+      if screen then proxy.bind(screen) end
+    else
+      proxy = gpu
+    end
+
     proxy.setForeground(colors[8])
     proxy.setBackground(colors[1])
 
@@ -649,16 +679,20 @@ do
       local fg, bg = proxy.setForeground, proxy.setBackground
       local f, b = colors[1], colors[8]
       function proxy.setForeground(c)
-        if c >= 0xAAAAAA or c <= 0x111111 and f ~= c then
+        -- [[
+        if c >= 0xAAAAAA or c <= 0x000000 and f ~= c then
           fg(c)
         end
         f = c
+        --]]
       end
       function proxy.setBackground(c)
-        if c >= 0xAAAAAA or c <= 0x111111 and b ~= c then
+        -- [[
+        if c >= 0xDDDDDD or c <= 0x000000 and b ~= c then
           bg(c)
         end
         b = c
+        --]]
       end
       proxy.getBackground = function()return f end
       proxy.getForeground = function()return b end
@@ -667,7 +701,7 @@ do
     -- userspace will never directly see this, so it doesn't really matter what
     -- we put in this table
     local new = setmetatable({
-      attributes = {echo=true,line=true,raw=false,cursor=false}, -- terminal attributes
+      attributes = {echo=true,line=true,raw=false,cursor=false,xoff=false}, -- terminal attributes
       disabled = {}, -- disabled signals
       keyboards = {}, -- all attached keyboards on terminal initialization
       in_esc = false, -- was a partial escape sequence written
@@ -687,9 +721,11 @@ do
     proxy.setResolution(new.w, new.h)
     proxy.fill(1, 1, new.w, new.h, " ")
     
-    -- register all keyboards attached to the screen
-    for _, keyboard in pairs(component.invoke(screen, "getKeyboards")) do
-      new.keyboards[keyboard] = true
+    if screen then
+      -- register all keyboards attached to the screen
+      for _, keyboard in pairs(component.invoke(screen, "getKeyboards")) do
+        new.keyboards[keyboard] = true
+      end
     end
     
     -- register a keypress handler
@@ -3387,8 +3423,8 @@ do
     local new = k.create_process {
       name = args.name,
       parent = parent.pid or 0,
-      stdin = parent.stdin or (io and io.input()) or args.stdin,
-      stdout = parent.stdout or (io and io.output()) or args.stdout,
+      stdin = args.stdin or parent.stdin or (io and io.input()),
+      stdout = args.stdout or parent.stdout or (io and io.output()),
       stderr = args.stderr or parent.stderr or (io and io.stderr),
       input = args.input or parent.stdin or (io and io.input()),
       output = args.output or parent.stdout or (io and io.output()),
@@ -4499,24 +4535,52 @@ end
 --#include "extra/net/base.lua"
 -- getgpu - get the gpu associated with a tty --
 
+k.log(k.loglevels.info, "extra/ustty")
+
 do
   k.gpus = {}
+  local deletable = {}
 
   k.gpus[0] = k.logio.gpu
 
   k.hooks.add("sandbox", function()
-    function k.userspace.package.loaded.getgpu(id)
-      checkArg(1, id, "number")
+    k.userspace.package.loaded.tty = {
+      -- get the GPU associated with a TTY
+      getgpu = function(id)
+        checkArg(1, id, "number")
 
-      if not k.gpus[id] then
-        return nil, "terminal not registered"
+        if not k.gpus[id] then
+          return nil, "terminal not registered"
+        end
+
+        return k.gpus[id]
+      end,
+
+      -- create a TTY on top of a GPU and optional screen
+      create = function(gpu, screen)
+        if type(gpu) == "table" then screen = screen or gpu.getScreen() end
+        local raw = k.create_tty(gpu, screen)
+        deletable[raw.ttyn] = raw
+        local prox = io.open(string.format("/sys/dev/tty%d", raw.ttyn), "rw")
+        prox.tty = raw.ttyn
+        prox.buffer_mode = "none"
+        return prox
+      end,
+
+      -- cleanly delete a user-created TTY
+      delete = function(id)
+        checkArg(1, id, "number")
+        if not deletable[id] then
+          return nil, "tty " .. id
+            .. " is not user-created and cannot be deregistered"
+        end
+        deletable[id]:close()
+        return true
       end
-
-      return k.gpus[id]
-    end
+    }
   end)
 end
---#include "extra/getgpu.lua"
+--#include "extra/ustty.lua"
 -- sound api v2:  emulate the sound card for everything --
 
 k.log(k.loglevels.info, "extra/sound")

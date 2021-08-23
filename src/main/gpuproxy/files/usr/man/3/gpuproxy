@@ -1,0 +1,18 @@
+*{NAME}
+  gpuproxy - library for creating virtual GPUs out of real GPUs
+
+*{DESCRIPTION}
+  ${gpuproxy} is a library that provides a few utility functions perhaps useful in window management.
+
+*{FUNCTIONS}
+  blue{buffer}(*{gpu}:green{table}, *{buffer}:magenta{number}): green{table}
+    Creates a virtual GPU on which all calls are redirected to the specified buffer.
+
+  blue{area}(*{gpu}:green{table}, *{x}:magenta{number}, *{y}:magenta{number}, *{w}:magenta{number}, *{h}:magenta{number}): green{table}
+    Creates a virtual GPU on which all calls are confined to the specified rectangle.
+
+*{COPYRIGHT}
+  ULOS Libraries copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

@@ -3,7 +3,7 @@
 repo="ocawesome101/ulos-external"
 name="external"
 path="/tmp/$name"
-subdir="coreutils"
+subdir="gpuproxy"
 
 printf "downloading source\n"
 if ! [ -e $path ]; then
@@ -16,4 +16,4 @@ else
 fi
 
 rm -rf files && mkdir -p files
-cp -r /tmp/$name/$subdir/* files/
+cp -rv /tmp/external/$subdir/* files/

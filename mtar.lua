@@ -1,7 +1,7 @@
 #!/usr/bin/env lua
 -- create an mtar v1 file --
 
-local pat = "^" .. (... or "out/")
+local pat = "^" .. (... or "out/"):gsub("%-", "%%-")
 
 local function genHeader(name, len)
   io.stderr:write(name, "\n")

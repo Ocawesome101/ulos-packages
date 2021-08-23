@@ -1,4 +1,0 @@
-author="Ocawesome101"
-version=0
-description="A much fancier installer for ULOS"
-dependencies={"corelibs","coreutils","upm"}

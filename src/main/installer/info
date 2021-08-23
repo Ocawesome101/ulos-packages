@@ -1,0 +1,4 @@
+author="Ocawesome101"
+version=0.51
+description="ULOS installers"
+dependencies={"corelibs","coreutils","upm","gpuproxy"}

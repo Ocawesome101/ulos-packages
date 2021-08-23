@@ -10,7 +10,7 @@ fi
 
 path=src/$repo/
 
-ULOSREL="1.4.2"
+ULOSREL="1.5"
 
 export OS="ULOS $(date +%y.%m)-$ULOSREL"
 export PREPROCESSOR="$PWD/proc.lua"

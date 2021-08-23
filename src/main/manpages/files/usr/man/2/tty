@@ -1,0 +1,23 @@
+*{NAME}
+  tty - user TTY manipulation functions
+
+*{DESCRIPTION}
+  The ${tty} API provides three functions useful in conjunction with the *{gpuproxy}(*{3}) API.  These allow the user to get the GPU associated with a TTY, or create or delete a virtual TTY from a provided GPU proxy.
+
+  In the case of both blue{delete} and blue{getgpu}, the magenta{id} argument corresponds to the TTY's yellow{sysfs} ID;  for example, the TTY whose ID is magenta{2} is located at yellow{/sys/dev/tty2}.
+
+*{FUNCTIONS}
+  blue{create}(*{gpu}:red{string} or green{table}[, *{screen}: red{string}]): green{table}
+    Creates a TTY object over the provided yellow{gpu} and returns a file descriptor from the sysfs.
+
+  blue{delete}(*{id}:magenta{number})
+    Delete the TTY with the specified magenta{id}, but only if it is user-created; system-created TTYs may not be removed in this way.
+
+  blue{getgpu}(*{id}:magenta{number}): green{table}
+    Returns the GPU object associated with the specified TTY object.
+
+*{COPYRIGHT}
+  Cynosure kernel copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTINGS BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-cynosure/issues}.

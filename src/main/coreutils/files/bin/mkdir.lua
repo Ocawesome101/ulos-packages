@@ -37,7 +37,7 @@ for i=1, #args, 1 do
       for n, segment in ipairs(segments) do
         local ok, err = filesystem.touch(path.canonical("/"..
           table.concat(segments, "/", 1, n)), ftypes.directory)
-        if not ok and err then
+        if not ok and err and err ~= "file already exists" then
           io.stderr:write("mkdir: cannot create directory '", args[i], ": ",
             err, "\n")
           --os.exit(2)

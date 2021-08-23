@@ -6,7 +6,7 @@ path="/tmp/$name"
 subdir="installer"
 
 printf "downloading source\n"
-if ! [ -e $path]; then
+if ! [ -e $path ]; then
   git clone https://github.com/$repo $path
 else
   oldpwd=$PWD
@@ -15,4 +15,5 @@ else
   cd $oldpwd
 fi
 
+rm -rf files && mkdir -p files
 cp -rv /tmp/external/$subdir/* files/

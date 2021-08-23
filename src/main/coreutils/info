@@ -1,4 +1,4 @@
 author="Ocawesome101"
-version=1.45
+version=1.50
 description="The ULOS core utilities"
 dependencies={"corelibs"}

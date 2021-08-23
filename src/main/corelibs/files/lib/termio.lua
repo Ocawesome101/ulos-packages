@@ -74,6 +74,7 @@ function lib.readKey()
   getHandler().setRaw(true)
   local data = io.stdin:read(1)
   local key, flags
+  flags = {}
 
   if data == "\27" then
     local intermediate = io.stdin:read(1)
