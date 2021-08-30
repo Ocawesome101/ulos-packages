@@ -6,11 +6,11 @@ local rf = {}
 
 do
   rf._NAME = "Refinement"
-  rf._RELEASE = "1.40"
+  rf._RELEASE = "1.54"
   rf._RUNNING_ON = "ULOS 21.08-1.5"
   
   io.write("\n  \27[97mWelcome to \27[93m", rf._RUNNING_ON, "\27[97m!\n\n")
-  local version = "2021.08.23"
+  local version = "2021.08.29"
   rf._VERSION = string.format("%s r%s-%s", rf._NAME, rf._RELEASE, version)
 end
 --#include "src/version.lua"
@@ -23,51 +23,29 @@ do
     green = " \27[92m*\27[97m ",
     yellow = " \27[93m*\27[97m "
   }
-  function rf.log(...)
-    io.write(...)
-    io.write("\n")
+
+  local h,e=io.open("/sys/cmdline","r")
+  if h then
+    e=h:read("a")
+    h:close()
+    h=e
+  end
+  if h and h:match("bootsplash") then
+    rf._BOOTSPLASH = true
+    function rf.log(...)
+      io.write("\27[G\27[2K", ...)
+      io.flush()
+    end
+  else
+    function rf.log(...)
+      io.write(...)
+      io.write("\n")
+    end
   end
 
   rf.log(rf.prefix.blue, "Starting \27[94m", rf._VERSION, "\27[97m")
 end
 --#include "src/logger.lua"
--- require function
-
-rf.log(rf.prefix.green, "src/require")
-
-do
-  local loaded = package.loaded
-  local loading = {}
-  function _G.require(module)
-    if loaded[module] then
-      return loaded[module]
-    elseif not loading[module] then
-      local library, status, step
-      
-      step, library, status = "not found",
-          package.searchpath(module, package.path)
-      
-      if library then
-        step, library, status = "loadfile failed", loadfile(library)
-      end
-      
-      if library then
-        loading[module] = true
-        step, library, status = "load failed", pcall(library, module)
-        loading[module] = false
-      end
-      
-      assert(library, string.format("module '%s' %s:\n%s",
-          module, step, status))
-      
-      loaded[module] = status
-      return status
-    else
-      error("already loading: " .. module .. "\n" .. debug.traceback(), 2)
-    end
-  end
-end
---#include "src/require.lua"
 -- set the system hostname, if possible --
 
 rf.log(rf.prefix.green, "src/hostname")
@@ -88,6 +66,7 @@ local config = {}
 do
   rf.log(rf.prefix.blue, "Loading service configuration")
 
+  local fs = require("filesystem")
   local capi = require("config").bracket
 
   -- string -> boolean, number, or string
@@ -205,7 +184,12 @@ do
   
   function sv.list()
     local r = {}
-    for k,v in pairs(running) do r[k] = v end
+    for k,v in pairs(config) do
+      if k ~= "__load_order" then
+        r[k] = {isRunning = not not running[k], isEnabled = not not v.autostart,
+          type = config[k].type}
+      end
+    end
     return r
   end
 
@@ -283,16 +267,12 @@ do
 
   local shutdown = computer.shutdown
 
-  function computer.shutdown(rbt)
-    if process.info().owner ~= 0 then
-      return nil, "permission denied"
-    end
-
+  function rf.shutdown(rbt)
     rf.log(rf.prefix.red, "INIT: Stopping services")
     
     for svc, proc in pairs(rf.running) do
       rf.log(rf.prefix.yellow, "INIT: Stopping service: ", svc)
-      process.kill(proc)
+      process.kill(proc, process.signals.kill)
     end
 
     if package.loaded.network then
@@ -310,11 +290,20 @@ do
     rf.log(rf.prefix.red, "INIT: Requesting system shutdown")
     shutdown(rbt)
   end
+
+  function computer.shutdown(rbt)
+    if process.info().owner ~= 0 then return nil, "permission denied" end
+    rf._shutdown = true
+    rf._shutdown_mode = not not rbt
+  end
 end
 --#include "src/shutdown.lua"
 
 while true do
+  if rf._shutdown then
+    rf.shutdown(rf._shutdown_mode)
+  end
   --local s = table.pack(
-  coroutine.yield()
+  coroutine.yield(2)
   --) if s[1] == "process_died" then print(table.unpack(s)) end
 end

@@ -1,0 +1,4 @@
+author="Ocawesome101"
+description="A port of the Open System GUI"
+version=0.5
+dependencies={"gpuproxy"}

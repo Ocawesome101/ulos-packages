@@ -5,6 +5,7 @@ local acl = require("acls")
 local users = require("users")
 local process = require("process")
 
+local n_args = select("#", ...)
 local args, opts = require("argutil").parse(...)
 
 if opts.help then
@@ -36,9 +37,15 @@ local user = args[1] or current
 local _ok, _err = users.get_uid(user)
 local attr
 if not _ok then
+  io.stderr:write("passwd: warning: " .. _err .. "\n")
   attr = {}
 else
-  attr = users.attributes(_ok)
+  local err
+  attr, err = users.attributes(_ok)
+  if not attr then
+    io.stderr:write("passwd: failed getting attributes: " .. err .. "\n")
+    os.exit(1)
+  end
 end
 
 attr.home = opts.home or attr.home or "/home/" .. user
@@ -72,18 +79,20 @@ elseif opts.r or opts.remove then
   os.exit(0)
 end
 
-local pass
-repeat
-  io.stderr:write("password: \27[8m")
-  pass = io.read()
-  io.stderr:write("\27[0m\n")
-  if #pass < 5 then
-    io.stderr:write("passwd: password too short\n")
-  end
-until #pass > 4
+if n_args == 0 or (args[1] and args[1] ~= current) then
+  local pass
+  repeat
+    io.stderr:write("password: \27[8m")
+    pass = io.read()
+    io.stderr:write("\27[0m\n")
+    if #pass < 4 then
+      io.stderr:write("passwd: password too short\n")
+    end
+  until #pass >= 4
 
-attr.pass = sha(pass):gsub(".", function(x)
-  return string.format("%02x", x:byte()) end)
+  attr.pass = sha(pass):gsub(".", function(x)
+    return string.format("%02x", x:byte()) end)
+end
 
 for a in (opts.enable or ""):gmatch("[^,]+") do
   attr.acls[a:upper()] = true
@@ -94,12 +103,12 @@ for a in (opts.disable or ""):gmatch("[^,]+") do
 end
 
 local function pc(f, ...)
-  local ok, a, b = pcall(f, ...)
-  if not ok and a then
-    io.stderr:write("passwd: ", a, "\n")
+  local result = table.pack(pcall(f, ...))
+  if not result[1] and result[2] then
+    io.stderr:write("passwd: ", result[2], "\n")
     os.exit(1)
   else
-    return a, b
+    return table.unpack(result, 2, result.n)
   end
 end
 

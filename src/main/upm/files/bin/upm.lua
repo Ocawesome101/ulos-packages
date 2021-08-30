@@ -12,8 +12,9 @@ local cfg = config.bracket:load("/etc/upm.cfg") or
 cfg.General = cfg.General or {__load_order={"dataDirectory","cacheDirectory"}}
 cfg.General.dataDirectory = cfg.General.dataDirectory or "/etc/upm"
 cfg.General.cacheDirectory = cfg.General.cacheDirectory or "/etc/upm/cache"
-cfg.Repositories = cfg.Repositories or {__load_order={"main"},
-  main = "https://oz-craft.pickardayune.com/upm/main/"}
+cfg.Repositories = cfg.Repositories or {__load_order={"main","extra"},
+  main = "https://oz-craft.pickardayune.com/upm/main/",
+ extra = "https://oz-craft.pickardayune.com/upm/extra/"}
 
 config.bracket:save("/etc/upm.cfg", cfg)
 

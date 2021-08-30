@@ -1,0 +1,32 @@
+*{NAME}
+  wm.textbox - simple textbox widget for UWM apps
+
+*{DESCRIPTION}
+  This library is similar to the *{wm.item}(*{3}) library, except that its sole purpose is to provide a textbox widget.
+
+  The library returns one function:
+    
+    blue{function}(*{options}:green{table}): green{table}
+      Returns a *{textbox} based on the specified green{options}.  These are:
+
+        green{{}
+          *{x} = magenta{number},
+          *{y} = magenta{number},
+          *{w} = magenta{number},
+          *{foreground} = magenta{number},
+          *{background} = magenta{number},
+          *{isPassword} = magenta{boolean},
+          *{submit} = blue{function}(*{self}, *{text}:red{string}),
+          *{text} = red{string},
+          *{window} = green{table}
+        green{}}
+
+      The only required options are *{x}, *{y}, *{w}, and *{window}.
+
+  *{textbox}es have the blue{:key}, blue{:click}, and blue{:refresh} methods of the *{app} object.
+
+*{COPYRIGHT}
+  ULOS Window Manager copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Please report bugs at @{https://github.com/ocawesome101/oc-ulos/issues}.

@@ -3,10 +3,10 @@
 local blacklist = {
   setActiveBuffer = true,
   getActiveBuffer = true,
-  setForeground = true,
-  getForeground = true,
-  setBackground = true,
-  getBackground = true,
+  --setForeground = true,
+  --getForeground = true,
+  --setBackground = true,
+  --getBackground = true,
   allocateBuffer = true,
   setDepth = true,
   getDepth = true,
@@ -18,23 +18,43 @@ local blacklist = {
   buffers = true,
   getBufferSize = true,
   freeAllBuffers = true,
-  freeMemory = true
+  freeMemory = true,
+  getScreen = true,
+  bind = true
 }
 
 return {
-  buffer = function(px, bufi)
+  buffer = function(px, bufi, wo, ho)
     local new = {}
   
+    local w, h = px.getBufferSize(bufi)
+    w = math.max(1, math.min(w, wo or w))
+    h = math.max(1, math.min(h, ho or h))
+    
     for k, v in pairs(px) do
-      if not blacklist[v] then
+      if not blacklist[k] then
         new[k] = function(...)
-          gpu.setActiveBuffer(bufi)
-          return v(...)
+          px.setActiveBuffer(bufi)
+          local result = table.pack(pcall(v, ...))
+          px.setActiveBuffer(0)
+          if not result[1] then
+            return nil, result[2]
+          else
+            return table.unpack(result, 2)
+          end
         end
       else
         new[k] = v
       end
     end
+
+    function new.getResolution()
+      return w, h
+    end
+    new.maxResolution = new.getResolution
+    new.setResolution = function() end
+
+    new.isProxy = true
 
     return new
   end,
@@ -56,6 +76,8 @@ return {
       rx, ry) end
 
     wrap.getScreen = px.getScreen
+
+    wrap.isProxy = true
 
     return wrap
   end

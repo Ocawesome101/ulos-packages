@@ -54,4 +54,4 @@ end
 status(1, 2, "Loading kernel from " .. cfg.path)
 status(1, 3, "Kernel flags: " .. table.concat(cfg.flags, " "))
 
-assert(load(readFile(cfg.path), "="..cfg.path, "t", _G))(table.unpack(cfg.flags))
+assert(xpcall(assert(load(readFile(cfg.path), "="..cfg.path, "t", _G)), debug.traceback, table.unpack(cfg.flags)))

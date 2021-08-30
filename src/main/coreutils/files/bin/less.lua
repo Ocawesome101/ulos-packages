@@ -33,6 +33,16 @@ for i=1, #args, 1 do
   end
 end
 
+if #lines <= h then
+  for i=1, #lines, 1 do
+    io.write(lines[i] .. "\n")
+  end
+  io.write("\27[30;47mEND\27[m")
+  repeat local k = termio.readKey() until k == "q"
+  io.write("\27[G\27[2K")
+  os.exit()
+end
+
 local function redraw()
   io.write("\27[1;1H")
   for i=1, h-1, 1 do

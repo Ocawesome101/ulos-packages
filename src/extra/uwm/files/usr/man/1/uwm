@@ -1,0 +1,36 @@
+*{NAME}
+  uwm - start the ULOS Window Manager
+
+*{SYNOPSIS}
+  ${uwm}
+
+*{DESCRIPTION}
+  ${uwm} is a basic window manager.  It provides facilities for the creation and deletion of windowed applications;  all else is left to the application itself.
+
+  See *{uwm}(*{3}) for information on the API to which apps are given access.
+
+*{USAGE}
+  When ${uwm} starts, it displays a solid light-gray background with the text
+
+    *{Quit | ULOS Window Manager | Right-Click for menu}
+
+  in the top left corner.
+
+  Right-clicking anywhere on the screen will open the *{UWM App Menu}.  Click an option to select it or anywhere else to close the menu.  All files under #{/usr/share/apps} are listed as options.
+
+  Selecting any application will load the corresponding application file and attach its returned UI data to the window tree.
+
+  Each window is by default 65x20 in size and uses a corresponding amount of GPU memory.  This means that, on a Tier 3 GPU with default configuration, there may be at most 18 windows open at any one time.  On a Tier 2 GPU, there may only be 3 windows.
+
+  Clicking *{Quit} will, after a confirmation prompt has been accepted, exit ${uwm}, freeing all allocated window-buffers and calling blue{:close} on all windows.
+
+  ${uwm} does not support nested instances.
+
+*{CONFIGURATION}
+  ${uwm} is configured through #{/etc/uwm.cfg}.
+
+*{COPYRIGHT}
+  ULOS Window Manager copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Please report bugs at @{https://github.com/ocawesome101/oc-ulos}.

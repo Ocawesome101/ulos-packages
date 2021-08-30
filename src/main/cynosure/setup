@@ -14,21 +14,11 @@ else
   cd $oldpwd
 fi
 
-#printf "downloading build agent\n"
-#wget -q https://raw.githubusercontent.com/ocawesome101/oc-ulos/master/build -O $path/build
-
 printf "building\n"
 oldpwd=$PWD
 cd $path
 
-source .buildconfig
-kmods=$(echo $KMODS | lua -e 'print((io.read():gsub(",", "\n")))')
-rm -f includes.lua && touch includes.lua
-for mod in $kmods; do
-  printf -- "--#include \"%s.lua\"\n" $mod >> includes.lua
-done
-
-$PREPROCESSOR init.lua kernel.lua
+./build.sh
 
 cd $oldpwd
 

@@ -1,0 +1,60 @@
+*{NAME}
+  uwm - the ULOS Window Manager API
+
+*{DESCRIPTION}
+  This manual page describes the API which *{uwm}(*{1}) presents to all applications running under it.  It also presents the expected structure of an application table.
+
+  Applications are loaded from files in #{/usr/share/apps}.  They are expected to return a table containing the following.  All functions are called with their first argument being the window object, which has a sub-field green{app} that is the actual application.
+
+    magenta{w}
+      The width, in characters, of the new window.
+    
+    magenta{h}
+      The height, in characters, of the new window.
+
+    red{name}
+      The name of the window.  Defaults to the filename minus the #{.lua} extension (so, the name of the app at #{/usr/share/apps/example.lua} becomes #{example} unless it is set in this field).
+
+    blue{refresh}(*{gpu}: green{table})
+      Refreshes the application.  The provided green{gpu} should be used as though only the application is running, and in fullscreen, since each window is its own GPU proxy (see *{gpuproxy}(*{3})).  Whether to actually redraw anything is at the application's discretion - for example, the *{sysmon} app only refreshes most of its content once every few seconds.
+
+    blue{click}(*{x}:magenta{number}, *{y}:magenta{number})
+      Called when a window is clicked.  magenta{x} and magenta{y} are relative to the window's position, so the programmer must not compensate for this.
+
+    blue{key}(*{char}:magenta{number}, *{code}:magenta{number})
+      Called when a key is pressed while the window is focused.
+
+    blue{focus}()
+      Called when the window is focused.  Not called when the window has just been created.
+
+    blue{unfocus}()
+      Called when the window is unfocused.
+
+    blue{close}([*{is_shutdown}:red{string}])
+      Called when the window is closed.  If red{is_shutdown} is red{"UI_CLOSING"}, this means that *{uwm} is quitting.
+
+  The following fields are provided in the window object passed as *{self} to the above functions:
+
+    *{app}:green{table}
+      The application attached to the window.
+
+    *{gpu}:green{table}
+      The GPU proxy associated with the window.
+
+    *{buffer}:magenta{number}
+      The GPU buffer index associated with the window.
+
+  The window manager adds an additional field to the green{app}:
+    
+    *{wm}:green{table}:
+      *{notify} = blue{function}(*{text}:red{string})
+        Prompts the user with the specified red{text} and an *{Ok} button.
+
+      *{menu} = blue{function}(*{x}:magenta{number}, *{y}:magenta{number}, *{title}:red{string}, *{opts}:green{table})
+        Presents the user with a menu at the specified coordinates containing the specified items green{opts} and with the specified red{title}.
+
+*{COPYRIGHT}
+  ULOS Window Manager copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Please report bugs at @{https://github.com/ocawesome101/oc-ulos/issues}

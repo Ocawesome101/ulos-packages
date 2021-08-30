@@ -29,10 +29,12 @@ for f in $files; do
     bash setup
     cd $opwd
   fi
-  printf "[\"$f\"]={" >> $repo/packages.list
-  printf "$(cat $path/$f/info | lua -e "print((io.read('a'):gsub('\n', ',')))")mtar=\"pkg/$f.mtar\"" >> $repo/packages.list $f
-  find $path/$f/files -type f | ./mtar.lua "$path/$f/files/" > $repo/pkg/$f.mtar
-  printf ",size=%s}," $(stat -c %s $repo/pkg/$f.mtar) >> $repo/packages.list
+  if [ -e "$path/$f/info" ]; then
+    printf "[\"$f\"]={" >> $repo/packages.list
+    printf "$(cat $path/$f/info | lua -e "print((io.read('a'):gsub('\n', ',')))")mtar=\"pkg/$f.mtar\"" >> $repo/packages.list $f
+    find $path/$f/files -type f | ./mtar.lua "$path/$f/files/" > $repo/pkg/$f.mtar
+    printf ",size=%s}," $(stat -c %s $repo/pkg/$f.mtar) >> $repo/packages.list
+  fi
 done
 
 printf "}}" >> $repo/packages.list

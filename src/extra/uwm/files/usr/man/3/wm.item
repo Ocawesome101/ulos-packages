@@ -1,0 +1,21 @@
+*{NAME}
+  wm.item - A library for widget manipulation
+
+*{DESCRIPTION}
+  This library provides basic widget support.  For textboxes, see *{wm.textbox}(({3}).
+
+  This library returns one function, which takes a few parameters and returns an object.
+
+    blue{function}(*{window}:green{table}): green{table}
+      Creates a new green{items} object over the specified green{window} and returns it.
+
+  Along with all methods provided by an green{app} (excepting blue{:close}()) - the following exclusive method is provided in the returned green{items} object:
+    
+    blue{:add}(*{item}:green{table})
+      Adds another green{item} to the green{items} object.  The provided green{item} must have at least magenta{x}, magenta{y}, magenta{w}, magenta{h}, and *{text} fields.  The *{text} field may be either a red{string} or a green{table} of strings.  Alternatively, if the green{item} has a blue{:refresh}() field, it will be called during the green{items} object's blue{:refresh}() process.
+
+*{COPYRIGHT}
+  ULOS Window Manager copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Please report bugs at @{https://github.com/ocawesome101/oc-ulos/issues}.

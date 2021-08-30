@@ -1,4 +1,4 @@
-version=1.40
+version=1.54
 author="Ocawesome101"
 description="The Refinement init system and accompanying utilities"
 depends={"coreutils"}

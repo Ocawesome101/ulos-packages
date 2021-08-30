@@ -26,8 +26,10 @@ end
 
 if verb == "list" then
   local r = sv.list()
+  print("ENABLED  ACTIVE  TYPE   NAME")
   for k,v in pairs(r) do
-    print(k)
+    print(string.format("%7s  %6s  %6s %s", tostring(v.isEnabled),
+      tostring(v.isRunning), v.type or "N/A", k))
   end
 else
   local ok, err = sv[verb](table.unpack(args, 2, #args))

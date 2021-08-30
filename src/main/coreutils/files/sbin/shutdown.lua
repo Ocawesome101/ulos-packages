@@ -12,10 +12,11 @@ end
 
 local function try(f, a)
   local ok, err = f(a)
-  if not ok then
+  if not ok and err then
     io.stderr:write("shutdown: ", err, "\n")
     os.exit(1)
   end
+  os.exit(0)
 end
 
 -- reboot

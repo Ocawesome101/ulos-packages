@@ -12,7 +12,7 @@ if (process.info().owner or 0) ~= 0 then
   os.exit(1)
 end
 
-io.write("\27?0c\27[39;49m\nWelcome to ULOS.\n\n")
+io.write("\27?0c\27[39;49m\n" .. _OSVERSION .. " (tty" .. io.stderr.tty .. ")\n\n")
 
 local rlops = {noexit = true}
 

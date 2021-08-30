@@ -14,6 +14,7 @@ end
 do
   local arg_pattern = "^(.-)=(.+)$"
   local orig_args = k.cmdline
+  k.__original_cmdline = orig_args
   k.cmdline = {}
 
   for i=1, #orig_args, 1 do
@@ -36,7 +37,7 @@ end
 do
   k._NAME = "Cynosure"
   k._RELEASE = "1.03"
-  k._VERSION = "2021.08.23-default"
+  k._VERSION = "2021.08.29-default"
   _G._OSVERSION = string.format("%s r%s-%s", k._NAME, k._RELEASE, k._VERSION)
 end
 --#include "base/version.lua"
@@ -167,17 +168,20 @@ do
   function commands:g(args)
     if #args < 1 then return end
     local cmd = table.remove(args, 1)
-    if cmd == 0 then
+    if cmd == 0 then -- fill
       if #args < 4 then return end
       args[1] = math.max(1, math.min(args[1], self.w))
       args[2] = math.max(1, math.min(args[2], self.h))
       self.gpu.fill(args[1], args[2], args[3], args[4], " ")
+    elseif cmd == 1 then -- copy
+      if #args < 6 then return end
+      self.gpu.copy(args[1], args[2], args[3], args[4], args[5], args[6])
     end
     -- TODO more commands
   end
 
-  function commands:G()
-    self.cx = 1
+  function commands:G(args)
+    self.cx = math.max(1, math.min(self.w, args[1] or 1))
   end
 
   function commands:H(args)
@@ -196,7 +200,7 @@ do
     local n = args[1] or 0
     
     if n == 0 then
-      self.gpu.fill(1, self.cy, self.w, self.h, " ")
+      self.gpu.fill(1, self.cy, self.w, self.h - self.cy, " ")
     elseif n == 1 then
       self.gpu.fill(1, 1, self.w, self.cy, " ")
     elseif n == 2 then
@@ -221,7 +225,8 @@ do
   -- echo.  for more control {ESC}?c may be desirable.
   function commands:m(args)
     args[1] = args[1] or 0
-    for i=1, #args, 1 do
+    local i = 1
+    while i <= #args do
       local n = args[i]
       if n == 0 then
         self.fg = colors[8]
@@ -251,7 +256,34 @@ do
       elseif n > 99 and n < 108 then
         self.bg = colors[n - 91]
         self.gpu.setBackground(self.bg)
+      elseif n == 38 then
+        i = i + 1
+        if not args[i] then return end
+        local mode = args[i]
+        if mode == 5 then -- 256-color mode
+          -- TODO
+        elseif mode == 2 then -- 24-bit color mode
+          local r, g, b = args[i + 1], args[i + 2], args[i + 3]
+          if not b then return end
+          i = i + 3
+          self.fg = (r << 16 + g << 8 + b)
+          self.gpu.setForeground(self.fg)
+        end
+      elseif n == 48 then
+        i = i + 1
+        if not args[i] then return end
+        local mode = args[i]
+        if mode == 5 then -- 256-color mode
+          -- TODO
+        elseif mode == 2 then -- 24-bit color mode
+          local r, g, b = args[i + 1], args[i + 2], args[i + 3]
+          if not b then return end
+          i = i + 3
+          self.bg = (r << 16 + g << 8 + b)
+          self.gpu.setBackground(self.bg)
+        end
       end
+      i = i + 1
     end
   end
 
@@ -265,13 +297,13 @@ do
 
   function commands:S(args)
     local n = args[1] or 1
-    self.gpu.copy(1, 1, self.w, self.h, 0, -n)
+    self.gpu.copy(1, n, self.w, self.h, 0, -n)
     self.gpu.fill(1, self.h, self.w, n, " ")
   end
 
   function commands:T(args)
     local n = args[1] or 1
-    self.gpu.copy(1, 1, self.w, self.h, 0, n)
+    self.gpu.copy(1, 1, self.w, self.h-n, 0, n)
     self.gpu.fill(1, 1, self.w, n, " ")
   end
 
@@ -430,7 +462,7 @@ do
           self.esc = ""
 
           local separator, raw_args, code = esc:match(
-            "\27([%[%?])([%d;]*)([a-zA-Z])")
+            "\27([%[%?])([%-%d;]*)([a-zA-Z])")
           raw_args = raw_args or "0"
           
           local args = {}
@@ -514,6 +546,10 @@ do
     end
 
     if signal[3] == 0 and signal[4] == 0 then
+      return
+    end
+
+    if self.xoff then
       return
     end
     
@@ -816,19 +852,53 @@ do
   if lgpu and lscr then
     k.logio = k.create_tty(lgpu, lscr)
     
-    function k.log(level, ...)
-      local msg = safe_concat(...)
-      msg = msg:gsub("\t", "  ")
+    if k.cmdline.bootsplash then
+      local lgpu = component.proxy(lgpu)
+      function k.log() end
 
-      if k.util and not k.util.concat then
-        k.util.concat = safe_concat
+      -- TODO custom bootsplash support
+      local splash = {
+        {{0x66b6ff,0,"   ⢀⣠⣴⣾"},{0x66b6ff,0xffffff,"⠿⠿⢿"},{0x66b6ff,0,"⣿⣶⣤⣀    "}},
+        {{0x66b6ff,0," ⢀⣴⣿⣿"},{0x66b6ff,0xffffff,"⠋     ⠉⠻⢿"},{0x66b6ff,0,"⣷⣄  "}},
+        {{0x66b6ff,0,"⢀⣾⣿⣿"},{0x66b6ff,0xffffff,"⠏        ⠈"},{0x66b6ff,0,"⣿⣿⣆ "}},
+        {{0x66b6ff,0,"⣾⣿⣿"},{0x66b6ff,0xffffff,"⡟   ⢀⣾⣿⣿⣦⣄⣠"},{0x66b6ff,0,"⣿⣿⣿⡆"}},
+        {{0x66b6ff,0,"⣿⣿⣿"},{0x66b6ff,0xffffff,"⠁   ⠘⠿⢿"},{0x66b6ff,0,"⣿⣿⣿⣿⣿⣿⣿⡇"}},
+        {{0x66b6ff,0,"⢻⣿⣿"},{0x66b6ff,0xffffff,"⣄⡀     ⠉⢻"},{0x66b6ff,0,"⣿⣿⣿⣿⣿⠃"}},
+        {{0x66b6ff,0," ⢻⣿⣿⣿⣿"},{0x66b6ff,0xffffff,"⣶⣆⡀  ⢸"},{0x66b6ff,0,"⣿⣿⣿⣿⠃ "}},
+        {{0x66b6ff,0,"  ⠙⢿⣿⣿⣿⣿⣿"},{0x66b6ff,0xffffff,"⣷"},{0x66b6ff,0,"⣿⣿⣿⣿⠟⠁  "}},
+        {{0x66b6ff,0,"    ⠈⠙⠻⠿⠿⠿⠿⠛⠉     "}},
+        {{0x66b6ff,0,"                  "}},
+        {{0xffffff,0,"     CYNOSURE     "}},
+      }
+
+      local w, h = lgpu.maxResolution()
+      local x, y = (w // 2) - 10, (h // 2) - (#splash // 2)
+      lgpu.setResolution(w, h)
+      lgpu.fill(1, 1, w, h, " ")
+      for i, line in ipairs(splash) do
+        local xo = 0
+        for _, ent in ipairs(line) do
+          lgpu.setForeground(ent[1])
+          lgpu.setBackground(ent[2])
+          lgpu.set(x + xo, y + i - 1, ent[3])
+          xo = xo + utf8.len(ent[3])
+        end
       end
-    
-      if (tonumber(k.cmdline.loglevel) or 1) <= level then
-        k.logio:write(string.format("[\27[35m%4.4f\27[37m] %s\n", k.uptime(),
-          msg))
+    else
+      function k.log(level, ...)
+        local msg = safe_concat(...)
+        msg = msg:gsub("\t", "  ")
+  
+        if k.util and not k.util.concat then
+          k.util.concat = safe_concat
+        end
+      
+        if (tonumber(k.cmdline.loglevel) or 1) <= level then
+          k.logio:write(string.format("[\27[35m%4.4f\27[37m] %s\n", k.uptime(),
+            msg))
+        end
+        return true
       end
-      return true
     end
   else
     k.logio = nil
@@ -1374,9 +1444,11 @@ do
     checkArg(4, pname, "string", "nil")
     checkArg(5, wait, "boolean", "nil")
     
-    if not k.security.acl.user_has_permission(k.scheduler.info().owner,
-        k.security.acl.permissions.user.SUDO) then
-      return nil, "permission denied: no permission"
+    if k.scheduler.info().owner ~= 0 then
+      if not k.security.acl.user_has_permission(k.scheduler.info().owner,
+          k.security.acl.permissions.user.SUDO) then
+        return nil, "permission denied: no permission"
+      end
     end
     
     if not api.authenticate(uid, pass) then
@@ -1435,6 +1507,8 @@ do
   function api.usermod(attributes)
     checkArg(1, attributes, "table")
     attributes.uid = tonumber(attributes.uid) or (#passwd + 1)
+
+    k.log(k.loglevels.debug, "changing attributes for user " .. attributes.uid)
     
     local current = k.scheduler.info().owner or 0
     
@@ -1449,30 +1523,35 @@ do
         return nil, "cannot change password: permission denied"
       end
       for k, v in pairs(passwd[attributes.uid]) do
-        attributes[k] = v
+        attributes[k] = attributes[k] or v
       end
     end
 
     attributes.home = attributes.home or "/home/" .. attributes.name
+    k.log(k.loglevels.debug, "shell = " .. attributes.shell)
     attributes.shell = (attributes.shell or "/bin/lsh"):gsub("%.lua$", "")
+    k.log(k.loglevels.debug, "shell = " .. attributes.shell)
 
     local acl = k.security.acl
-    local acls = 0
-    for k, v in pairs(attributes.acls) do
-      if acl.permissions.user[k] and v then
-        acls = acls & acl.permissions.user[k]
-        if not acl.user_has_permission(current, acl.permissions.user[k])
-            and current ~= 0 then
-          return nil, k .. ": ACL permission denied"
+    if type(attributes.acls) == "table" then
+      local acls = 0
+      
+      for k, v in pairs(attributes.acls) do
+        if acl.permissions.user[k] and v then
+          acls = acls | acl.permissions.user[k]
+          if not acl.user_has_permission(current, acl.permissions.user[k])
+              and current ~= 0 then
+            return nil, k .. ": ACL permission denied"
+          end
+        else
+          return nil, k .. ": no such ACL"
         end
-      else
-        return nil, k .. ": no such ACL"
       end
+
+      attributes.acls = acls
     end
 
-    attributes.acls = acls
-
-    passwd[attributes.uid] = attributes
+    passwd[tonumber(attributes.uid)] = attributes
 
     return true
   end
@@ -2693,7 +2772,7 @@ do
     local data = handle:read("a")
     handle:close()
 
-    return load(data, "="..file, "bt", k.userspace or _G)
+    return load(data, "="..file, "bt", env or k.userspace or _G)
   end
 
   function _G.dofile(file)
@@ -2788,6 +2867,37 @@ do
       __ipairs = shadow,
       __metatable = {}
     })
+
+    local loaded = k.userspace.package.loaded
+    local loading = {}
+    function k.userspace.require(module)
+      if loaded[module] then
+        return loaded[module]
+      elseif not loading[module] then
+        local library, status, step
+  
+        step, library, status = "not found",
+            package.searchpath(module, package.path)
+  
+        if library then
+          step, library, status = "loadfile failed", loadfile(library)
+        end
+  
+        if library then
+          loading[module] = true
+          step, library, status = "load failed", pcall(library, module)
+          loading[module] = false
+        end
+  
+        assert(library, string.format("module '%s' %s:\n%s",
+            module, step, status))
+  
+        loaded[module] = status
+        return status
+      else
+        error("already loading: " .. module .. "\n" .. debug.traceback(), 2)
+      end
+    end
   end)
 end
 --#include "base/stdlib/package.lua"
@@ -3070,10 +3180,11 @@ k.log(k.loglevels.info, "base/load")
 
 if (not k.cmdline.no_force_yields) then
   local patterns = {
+    --[[
     { "if([ %(])(.-)([ %)])then([ \n])", "if%1%2%3then%4__internal_yield() " },
     { "elseif([ %(])(.-)([ %)])then([ \n])", "elseif%1%2%3then%4__internal_yield() " },
-    { "([ \n])else([ \n])", "%1else%2__internal_yield() " },
-    { "while([ %(])(.-)([ %)])do([ \n])", "while%1%2%3do%4__internal_yield() " },
+    { "([ \n])else([ \n])", "%1else%2__internal_yield() " },]]
+    { "while([ %(])(.-)([ %)])do([ \n])", "while%1%2%3do%4__internal_yield() "},
     { "for([ %(])(.-)([ %)])do([ \n])", "for%1%2%3do%4__internal_yield() " },
     { "repeat([ \n])", "repeat%1__internal_yield() " },
   }
@@ -3176,6 +3287,9 @@ if (not k.cmdline.no_force_yields) then
       end
       
       env.coroutine.yield = function(...)
+        if #ysq > 0 then
+          return table.unpack(table.remove(ysq, 1))
+        end
         last_yield = computer.uptime()
         local msg = table.pack(old_cyield(...))
         ysq[#ysq+1] = msg
@@ -3399,6 +3513,12 @@ end
 k.log(k.loglevels.info, "base/scheduler")
 
 do
+  local globalenv = {
+    UID = 0,
+    USER = "root",
+    TERM = "cynosure"
+  }
+
   local processes = {}
   local current
 
@@ -3429,13 +3549,13 @@ do
       input = args.input or parent.stdin or (io and io.input()),
       output = args.output or parent.stdout or (io and io.output()),
       owner = args.owner or parent.owner or 0,
-      env = setmetatable(args.env or {}, {__index = parent.env,
-        __metatable = {}})
+      env = args.env or {}
     }
 
-    -- this is kind of ugly, but it works
-    new.env.TERM = new.env.TERM or "cynosure"
-    
+    for k, v in pairs(parent.env or globalenv) do
+      new.env[k] = new.env[k] or v
+    end
+
     new:add_thread(args.func)
     processes[new.pid] = new
     
@@ -3669,14 +3789,14 @@ do
       checkArg(1, pid, "number", "nil")
       checkArg(2, signal, "number")
       
-      local cur = current
+      local cur = processes[current]
       local atmp = processes[pid]
       
       if not atmp then
         return true
       end
       
-      if (atmp or {owner=current.owner}).owner ~= cur.owner and
+      if (atmp or {owner=processes[current].owner}).owner ~= cur.owner and
          cur.owner ~= 0 then
         return nil, "permission denied"
       end
@@ -3726,6 +3846,7 @@ end
 k.log(k.loglevels.info, "sysfs/sysfs")
 
 do
+  local cmdline = table.concat(k.__original_cmdline, " ") .. "\n"
   local tree = {
     dir = true,
     components = {
@@ -3775,6 +3896,18 @@ do
       end,
       write = function()
         return nil, "bad file descriptor"
+      end
+    },
+    cmdline = {
+      dir = false,
+      read = function(self, n)
+        self.__ptr = self.__ptr or 0
+        if self.__ptr >= #cmdline then
+          return nil
+        else
+          self.__ptr = self.__ptr + n
+          return cmdline:sub(self.__ptr - n, self.__ptr)
+        end
       end
     }
   }
@@ -4867,12 +5000,15 @@ do
   
   local ios = k.create_fstream(k.logio, "rw")
   ios.buffer_mode = "none"
+  ios.tty = 0
   
   k.scheduler.spawn {
     name = "init",
     func = ok,
     input = ios,
     output = ios,
+    stdin = ios,
+    stdout = ios,
     stderr = ios
   }
 

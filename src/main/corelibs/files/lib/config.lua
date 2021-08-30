@@ -82,6 +82,7 @@ function lib.bracket:load(file)
         val = {}
         if #_v > 0 then
           for _val in _v:gmatch("[^,]+") do
+            _val=_val:gsub("^ +","") -- remove starting spaces
             val[#val+1] = pval(_val)
           end
         end

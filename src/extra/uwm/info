@@ -1,0 +1,4 @@
+author="Ocawesome101"
+version=1.30
+description="The ULOS Window Manager"
+dependencies={"coreutils","gpuproxy"}
