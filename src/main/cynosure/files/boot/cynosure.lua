@@ -36,8 +36,8 @@ end
 
 do
   k._NAME = "Cynosure"
-  k._RELEASE = "1.03"
-  k._VERSION = "2021.08.29-default"
+  k._RELEASE = "1.68"
+  k._VERSION = "2021.08.31-default"
   _G._OSVERSION = string.format("%s r%s-%s", k._NAME, k._RELEASE, k._VERSION)
 end
 --#include "base/version.lua"
@@ -63,10 +63,15 @@ do
     0xffffff
   }
 
+  local len = unicode.len
+  local sub = unicode.sub
+
   -- pop characters from the end of a string
-  local function pop(str, n)
-    local ret = str:sub(1, n)
-    local also = str:sub(#ret + 1, -1)
+  local function pop(str, n, u)
+    local sub, len = string.sub, string.len
+    if not u then sub = unicode.sub len = unicode.len end
+    local ret = sub(str, 1, n)
+    local also = sub(str, len(ret) + 1, -1)
  
     return also, ret
   end
@@ -102,7 +107,7 @@ do
       
       self.gpu.set(self.cx, self.cy, to_write)
       
-      self.cx = self.cx + #to_write
+      self.cx = self.cx + len(to_write)
       wrapped = self.cx > self.w
       
       wrap_cursor(self)
@@ -111,12 +116,13 @@ do
   end
 
   local function write(self, lines)
+    if self.attributes.xoff then return end
     while #lines > 0 do
       local next_nl = lines:find("\n")
 
       if next_nl then
         local ln
-        lines, ln = pop(lines, next_nl - 1)
+        lines, ln = pop(lines, next_nl - 1, true)
         lines = lines:sub(2) -- take off the newline
         
         local w = writeline(self, ln)
@@ -407,10 +413,11 @@ do
     if self.attributes.line and not k.cmdline.nottylinebuffer then
       self.wb = self.wb .. str
       if self.wb:find("\n") then
-        local ln = self.wb:match("(.-\n)")
+        local ln = self.wb:match(".+\n")
+        if not ln then ln = self.wb:match(".-\n") end
         self.wb = self.wb:sub(#ln + 1)
         return self:write_str(ln)
-      elseif #self.wb > 2048 then
+      elseif len(self.wb) > 2048 then
         local ln = self.wb
         self.wb = ""
         return self:write_str(ln)
@@ -442,10 +449,10 @@ do
     str = str:gsub("\t", "  ")
     
     while #str > 0 do
-      if computer.uptime() - time >= 4.8 then -- almost TLWY
+      --[[if computer.uptime() - time >= 4.8 then -- almost TLWY
         time = computer.uptime()
         computer.pullSignal(0) -- yield so we don't die
-      end
+      end]]
 
       if self.in_esc then
         local esc_end = str:find("[a-zA-Z]")
@@ -456,7 +463,7 @@ do
           self.in_esc = false
 
           local finish
-          str, finish = pop(str, esc_end)
+          str, finish = pop(str, esc_end, true)
 
           local esc = string.format("%s%s", self.esc, finish)
           self.esc = ""
@@ -493,7 +500,7 @@ do
           self.esc = ""
         
           local ln
-          str, ln = pop(str, next_esc - 1)
+          str, ln = pop(str, next_esc - 1, true)
           
           write(self, ln)
         else
@@ -562,7 +569,7 @@ do
       return
     end
     
-    if #char == 1 and ch == 0 then
+    if len(char) == 1 and ch == 0 then
       char = ""
       tw = ""
     elseif char:match("\27%[[ABCD]") then
@@ -651,12 +658,12 @@ do
     local dd = self.disabled.D or self.attributes.raw
 
     if self.attributes.line then
-      while (not self.rb:find("\n")) or (self.rb:find("\n") < n)
+      while (not self.rb:find("\n")) or (len(self.rb:sub(1, (self.rb:find("\n")))) < n)
           and not (self.rb:find("\4") and not dd) do
         coroutine.yield()
       end
     else
-      while #self.rb < n and (self.attributes.raw or not
+      while len(self.rb) < n and (self.attributes.raw or not
           (self.rb:find("\4") and not dd)) do
         coroutine.yield()
       end
@@ -667,8 +674,8 @@ do
       return nil
     end
 
-    local data = self.rb:sub(1, n)
-    self.rb = self.rb:sub(n + 1)
+    local data = sub(self.rb, 1, n)
+    self.rb = sub(self.rb, n + 1)
     return data
   end
 
@@ -1437,28 +1444,34 @@ do
     return nil, "invalid password"
   end
 
-  function api.exec_as(uid, pass, func, pname, wait)
+  function api.exec_as(uid, pass, func, pname, wait, stdio)
     checkArg(1, uid, "number")
     checkArg(2, pass, "string")
     checkArg(3, func, "function")
     checkArg(4, pname, "string", "nil")
     checkArg(5, wait, "boolean", "nil")
+    checkArg(6, stdio, "FILE*", "nil")
     
     if k.scheduler.info().owner ~= 0 then
       if not k.security.acl.user_has_permission(k.scheduler.info().owner,
           k.security.acl.permissions.user.SUDO) then
         return nil, "permission denied: no permission"
       end
-    end
     
-    if not api.authenticate(uid, pass) then
-      return nil, "permission denied: bad login"
+      if not api.authenticate(uid, pass) then
+        return nil, "permission denied: bad login"
+      end
     end
     
     local new = {
       func = func,
       name = pname or tostring(func),
       owner = uid,
+      input = stdio,
+      output = stdio,
+      stdin = stdio,
+      stdout = stdio,
+      stderr = stdio,
       env = {
         USER = passwd[uid].name,
         UID = tostring(uid),
@@ -1469,7 +1482,7 @@ do
     
     local p = k.scheduler.spawn(new)
     
-    if not wait then return end
+    if not wait then return p.pid end
 
     -- this is the only spot in the ENTIRE kernel where process.await is used
     return k.userspace.package.loaded.process.await(p.pid)
@@ -1735,6 +1748,8 @@ do
   local function clean(path)
     return table.concat(split(path), "/")
   end
+
+  fs.clean = clean
 
   local faux = {children = mounts}
   local resolving = {}
@@ -2373,8 +2388,12 @@ do
       if fmt == "l" or fmt == "L" then
         local line = self:read_line()
       
+        if #line == 0 then
+          return nil
+        end
+
         if fmt == "l" then
-          line = line:sub(1, -2)
+          line = line:gsub("\n", "")
         end
         
         return line
@@ -2551,10 +2570,19 @@ do
   }
 
   _G.io = {}
+
+  local function makePathCanonical(path)
+    if path:sub(1,1) ~= "/" then
+      path = k.fs.clean((os.getenv("PWD") or "/") .. "/" .. path)
+    end
+    return path
+  end
   
   function io.open(file, mode)
     checkArg(1, file, "string")
     checkArg(2, mode, "string", "nil")
+
+    file = makePathCanonical(file)
   
     mode = mode or "r"
 
@@ -2615,7 +2643,14 @@ do
 
   local function stream(kk)
     return function(v)
-      if v then checkArg(1, v, "FILE*") end
+      if v then checkArg(1, v, "FILE*", "string") end
+      if type(v) == "string" then
+        local hd, err = io.open(v, kk == "input" and "r" or "w")
+        if not err then
+          error("cannot open file '" .. v .. "' (" .. err .. ")")
+        end
+        v = hd
+      end
 
       if not k.scheduler.info() then
         return k.logio
@@ -3434,6 +3469,7 @@ do
     [0] = function() end,
     [1] = function(self) self.status = "" self.dead = true end,
     [2] = function(self) self.status = "interrupted" self.dead = true end,
+    [3] = function(self) self.status = "" self.dead = true end,
     [9] = function(self) self.dead = true end,
     [18] = function(self) self.stopped = true end,
   }
@@ -3527,6 +3563,7 @@ do
   api.signals = {
     hangup = 1,
     interrupt = 2,
+    quit = 3,
     kill = 9,
     stop = 17,
     kbdstop = 18,

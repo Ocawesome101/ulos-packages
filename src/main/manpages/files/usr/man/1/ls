@@ -2,7 +2,7 @@
   ls - list files
 
 *{SYNOPSIS}
-  ${ls} [*{options] *{FILE ...}
+  ${ls} [*{options}] *{FILE ...}
 
 *{DESCRIPTION}
   For each *{FILE}, ${ls} lists all files under that *{FILE} if it is a directory, and *{-d} is not specified, or will list information about that file.  Listed files are sorted alphabetically.  If no *{FILE} is specified, ${ls} will list the current directory.
@@ -15,7 +15,7 @@
       Show hidden files (files whose names are preceded with a *{.}).
 
     *{--color=WHEN}
-      If *{WHEN} is "no", ${ls} will not colorize its output;  if ${WHEN} is "always", ${ls} will print colored output even when the output device is not a terminal;  otherwise, ${ls} will print colored output only if the output device is a terminal.
+      If *{WHEN} is "no", ${ls} will not colorize its output;  if *{WHEN} is "always", ${ls} will print colored output even when the output device is not a terminal;  otherwise, ${ls} will print colored output only if the output device is a terminal.
 
     *{-d}
       List directories in the same way as files, rather than listing their contents.

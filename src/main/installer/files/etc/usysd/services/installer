@@ -1,0 +1,3 @@
+[usysd-service]
+file = /usr/share/usysd/installer.lua
+user = root

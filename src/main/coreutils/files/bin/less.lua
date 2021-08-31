@@ -33,7 +33,7 @@ for i=1, #args, 1 do
   end
 end
 
-if #lines <= h then
+if #lines < h - 1 then
   for i=1, #lines, 1 do
     io.write(lines[i] .. "\n")
   end

@@ -10,10 +10,8 @@ fi
 
 path=src/$repo/
 
-ULOSREL="1.5"
-
-export OS="ULOS $(date +%y.%m)-$ULOSREL"
-export PREPROCESSOR="$PWD/proc.lua"
+wget https://raw.github.com/ocawesome101/oc-ulos/master/utils/env.sh -O /tmp/env.sh
+source /tmp/env.sh
 
 rm -rf $repo/pkg && mkdir -p $repo/pkg/
 

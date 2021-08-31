@@ -1,0 +1,10 @@
+*{NAME}
+  USysD - the ULOS System Daemon
+
+*{DESCRIPTION}
+  ${usysd} is a fairly advanced init system written for ULOS.  It is the spiritual successor to Refinement.
+
+  ${usysd}'s design draws somewhat from the real-world *{SystemD} init system.  Its advantages over Refinement are:
+    
+    * Service configuration is not monolithic
+    * Service management with the *{usysd}(*{1}) command is 

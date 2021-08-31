@@ -3,7 +3,7 @@
 repo="ocawesome101/ulos-external"
 name="external"
 path="/tmp/$name"
-subdir="coreutils"
+subdir="usysd"
 
 printf "downloading source\n"
 if ! [ -e $path ]; then
@@ -12,10 +12,11 @@ else
   oldpwd=$PWD
   cd $path
   git pull
-  cd $oldpwd
 fi
 
+cd $path/$subdir
+./build.sh
+cd $oldpwd
+
 rm -rf files && mkdir -p files
-cp -r /tmp/$name/$subdir/* files/
-mkdir -p files/etc
-printf "VERSION=\"$ULOSVERSION\"\nBUILD_ID=\"$DATE\"\nVERSION_ID=\"$ULOSREL\"\n" | cat /tmp/$name/os-release - > files/etc/os-release
+cp -rv /tmp/external/$subdir/out/* files/

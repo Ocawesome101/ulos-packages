@@ -77,7 +77,7 @@ if online then
   local pklist = {
     "cldr",
     "cynosure",
-    "refinement",
+    "usysd",
     "coreutils",
     "corelibs",
     "upm",

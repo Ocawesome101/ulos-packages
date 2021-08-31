@@ -1,0 +1,37 @@
+*{NAME}
+  usysd - manage services under the USysD init system
+
+*{SYNOPSIS}
+  ${usysd} <*{start}|*{stop}> *{SERVICE}[@tty*{N}]
+  ${usysd} <*{enable}|*{disable}> [*{--now}] *{SERVICE}[@tty*{N}]
+  ${usysd} *{list} [*{--enabled}|*{--running}]
+
+*{DESCRIPTION}
+  ${usysd} is the command-line service management interface for USysD.  It takes inspiration from SystemD's *{systemctl} command in semantics and options.
+
+  Available commands:
+    
+    *{start}
+      Starts the specified service.
+
+    *{stop}
+      Stops the specified service.
+
+    *{enable}
+      Enables the specified service to be automatically started on the next system startup.  If *{--now} is specified, starts it.
+
+    *{disable}
+      Disables the specified service from starting on the next system startup.  If *{--now} is specified, stops it.
+
+    *{list}
+
+  When specifying a service, you may add *{@tty}magenta{N} to the end of its name to specify that it should start on ttymagenta{N}.  This is useful, for example, for starting multiple login instances using the same service.
+
+*{COPYRIGHT}
+  USysD is copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{SEE ALSO}
+  *{usysd}*({3}), *{usysd}(*{7})
+
+*{REPORTING BUGS}
+  Please report bugs at @{https://github.com/ocawesome101/oc-ulos/issues}.

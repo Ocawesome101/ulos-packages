@@ -7,10 +7,10 @@ local rf = {}
 do
   rf._NAME = "Refinement"
   rf._RELEASE = "1.54"
-  rf._RUNNING_ON = "ULOS 21.08-1.5"
+  rf._RUNNING_ON = "ULOS"
   
   io.write("\n  \27[97mWelcome to \27[93m", rf._RUNNING_ON, "\27[97m!\n\n")
-  local version = "2021.08.29"
+  local version = "2021.08.31"
   rf._VERSION = string.format("%s r%s-%s", rf._NAME, rf._RELEASE, version)
 end
 --#include "src/version.lua"
