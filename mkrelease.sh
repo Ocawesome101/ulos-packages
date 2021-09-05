@@ -31,6 +31,8 @@ cat /tmp/external/os-release
 find $OUTDIR -type f | ./mtar.lua $OUTDIR > release.mtar
 cat /tmp/cynosure/mtarldr.lua release.mtar /tmp/cynosure/mtarldr_2.lua > release.lua
 
+echo "MAKE GUI IMAGE"
+
 addpkg extra/uwm
 echo "uwm-login@tty0" > $OUTDIR/etc/usysd/autostart
 

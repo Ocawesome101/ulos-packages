@@ -1,0 +1,16 @@
+*{NAME}
+  norris - print Chuck Norris jokes
+
+*{SYNOPSIS}
+  ${norris}
+
+*{DESCRIPTION}
+  ${norris} prints a random Chuck Norris joke from the internet each time it is invoked.
+
+  red{Content Warning: these jokes are unfiltered and may be offensive to some parties, or not safe for work, or not safe for children.}  They *{are} Chuck Norris jokes.
+
+*{COPYRIGHT}
+  This program is copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Please report bugs at @{https://github.com/ocawesome101/oc-ulos/issues}.

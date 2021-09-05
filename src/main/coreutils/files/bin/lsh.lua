@@ -527,7 +527,6 @@ io.popen = function(command, mode)
   assert(mode == "r" or mode == "w", "bad mode to io.popen")
 
   local handle = pipe.create()
-  handle.buffer_mode = "none"
 
   processCommand(command, false, handle, true)
 

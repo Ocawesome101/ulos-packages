@@ -186,12 +186,12 @@ end
 
 local function install_online(wrapped)
   local pklist = {
-    "cldr",
     "cynosure",
     "usysd",
     "coreutils",
     "corelibs",
-    "upm"
+    "upm",
+    "cldr",
   }
   local ok = wdofile(wrapped, "/bin/upm.lua", "update", "--root=/mnt")
   if ok then

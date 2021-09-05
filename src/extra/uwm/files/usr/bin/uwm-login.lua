@@ -78,7 +78,7 @@ local function log_in(uname, pass)
   end
 
   local exit, err = users.exec_as(users.get_uid(uname), pass, uwm, "uwm", true)
-  if not exit then
+  if exit ~= 0 or not exit then
     menu("**"..err.."**", {"Ok"})
     return
   end

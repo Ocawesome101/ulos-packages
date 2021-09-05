@@ -1,0 +1,11 @@
+# this is an odd language
+# i've written highlighting for VLE only because it's stupidly easy to
+# get decent results really fast
+
+comment //
+constpat ^[%d%.]+$
+constpat ^0x[0-9a-fA-F%.]+$
+keychars ,=+-/*()
+keywords include fn var asm const
+builtin nop imm sto ldr psh pop mov add sub div mul lsh rsh xor or not and
+builtin jur jun jcr jcn sof cmp dsi eni hdi int prd pwr hlt

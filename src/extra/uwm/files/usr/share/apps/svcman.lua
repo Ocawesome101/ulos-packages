@@ -1,5 +1,9 @@
 -- svcman: service manager --
 
+if not package.loaded.sv then
+  error("this app requires Refinement")
+end
+
 local sv = require("sv")
 local item = require("wm.item")
 local tbox = require("wm.textbox")

@@ -1,0 +1,2 @@
+[usysd-service]
+file = /usr/bin/uwm-login.lua

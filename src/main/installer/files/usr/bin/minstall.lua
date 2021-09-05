@@ -75,12 +75,12 @@ end
 if online then
   os.execute("upm update --root=/mnt")
   local pklist = {
-    "cldr",
     "cynosure",
     "usysd",
     "coreutils",
     "corelibs",
     "upm",
+    "cldr",
   }
   if full then
     pklist[#pklist+1] = "tle"

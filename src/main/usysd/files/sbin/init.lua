@@ -12,7 +12,7 @@ local usd = {}
 
 usd._VERSION_MAJOR = 1
 usd._VERSION_MINOR = 0
-usd._VERSION_PATCH = 3
+usd._VERSION_PATCH = 4
 usd._RUNNING_ON = "unknown"
 
 io.write(string.format("USysD version %d.%d.%d\n", usd._VERSION_MAJOR, usd._VERSION_MINOR,
@@ -25,11 +25,13 @@ do
     handle:close()
 
     local name = data:match("PRETTY_NAME=\"(.-)\"")
+    local color = data:match("ANSI_COLOR=\"(.-)\"")
     if name then usd._RUNNING_ON = name end
+    if color then usd._ANSI_COLOR = color end
   end
 end
 
-io.write("\n  \27[97mWelcome to \27[96m" .. usd._RUNNING_ON .. "\27[97m!\27[37m\n\n")
+io.write("\n  \27[97mWelcome to \27[" .. (usd._ANSI_COLOR or "96") .. "m" .. usd._RUNNING_ON .. "\27[97m!\27[37m\n\n")
 --#include "src/version.lua"
 -- logger stuff --
 

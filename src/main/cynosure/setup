@@ -18,7 +18,7 @@ printf "building\n"
 oldpwd=$PWD
 cd $path
 
-./build.sh
+BOOTSPLASH=extra/bootsplash-ulos ./build.sh
 
 cd $oldpwd
 

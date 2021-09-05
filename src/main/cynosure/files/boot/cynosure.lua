@@ -36,8 +36,8 @@ end
 
 do
   k._NAME = "Cynosure"
-  k._RELEASE = "1.68"
-  k._VERSION = "2021.08.31-default"
+  k._RELEASE = "1.72"
+  k._VERSION = "2021.09.05-default"
   _G._OSVERSION = string.format("%s r%s-%s", k._NAME, k._RELEASE, k._VERSION)
 end
 --#include "base/version.lua"
@@ -272,7 +272,7 @@ do
           local r, g, b = args[i + 1], args[i + 2], args[i + 3]
           if not b then return end
           i = i + 3
-          self.fg = (r << 16 + g << 8 + b)
+          self.fg = (r << 16) + (g << 8) + b
           self.gpu.setForeground(self.fg)
         end
       elseif n == 48 then
@@ -285,7 +285,7 @@ do
           local r, g, b = args[i + 1], args[i + 2], args[i + 3]
           if not b then return end
           i = i + 3
-          self.bg = (r << 16 + g << 8 + b)
+          self.bg = (r << 16) + (g << 8) + b
           self.gpu.setBackground(self.bg)
         end
       end
@@ -594,12 +594,12 @@ do
         local mxp = 0
 
         for _k, v in pairs(k.scheduler.processes) do
-          --k.log(k.loglevels.error, _k, v.name)
-          if v.io.stderr.tty == self.ttyn then
+          --k.log(k.loglevels.error, _k, v.name, v.io.stderr.tty, self.ttyn)
+          if v.io.stderr.tty == self.tty then
             mxp = math.max(mxp, _k)
-          elseif v.io.stdin.tty == self.ttyn then
+          elseif v.io.stdin.tty == self.tty then
             mxp = math.max(mxp, _k)
-          elseif v.io.stdout.tty == self.ttyn then
+          elseif v.io.stdout.tty == self.tty then
             mxp = math.max(mxp, _k)
           end
         end
@@ -607,7 +607,7 @@ do
         --k.log(k.loglevels.error, "sending", sigacts[tch], "to", mxp == 0 and mxp or k.scheduler.processes[mxp].name)
 
         if mxp > 0 then
-          k.scheduler.processes[mxp]:signal(sigacts[tch])
+          k.scheduler.kill(mxp, sigacts[tch])
         end
 
         self.rb = ""
@@ -863,19 +863,9 @@ do
       local lgpu = component.proxy(lgpu)
       function k.log() end
 
-      -- TODO custom bootsplash support
       local splash = {
-        {{0x66b6ff,0,"   ⢀⣠⣴⣾"},{0x66b6ff,0xffffff,"⠿⠿⢿"},{0x66b6ff,0,"⣿⣶⣤⣀    "}},
-        {{0x66b6ff,0," ⢀⣴⣿⣿"},{0x66b6ff,0xffffff,"⠋     ⠉⠻⢿"},{0x66b6ff,0,"⣷⣄  "}},
-        {{0x66b6ff,0,"⢀⣾⣿⣿"},{0x66b6ff,0xffffff,"⠏        ⠈"},{0x66b6ff,0,"⣿⣿⣆ "}},
-        {{0x66b6ff,0,"⣾⣿⣿"},{0x66b6ff,0xffffff,"⡟   ⢀⣾⣿⣿⣦⣄⣠"},{0x66b6ff,0,"⣿⣿⣿⡆"}},
-        {{0x66b6ff,0,"⣿⣿⣿"},{0x66b6ff,0xffffff,"⠁   ⠘⠿⢿"},{0x66b6ff,0,"⣿⣿⣿⣿⣿⣿⣿⡇"}},
-        {{0x66b6ff,0,"⢻⣿⣿"},{0x66b6ff,0xffffff,"⣄⡀     ⠉⢻"},{0x66b6ff,0,"⣿⣿⣿⣿⣿⠃"}},
-        {{0x66b6ff,0," ⢻⣿⣿⣿⣿"},{0x66b6ff,0xffffff,"⣶⣆⡀  ⢸"},{0x66b6ff,0,"⣿⣿⣿⣿⠃ "}},
-        {{0x66b6ff,0,"  ⠙⢿⣿⣿⣿⣿⣿"},{0x66b6ff,0xffffff,"⣷"},{0x66b6ff,0,"⣿⣿⣿⣿⠟⠁  "}},
-        {{0x66b6ff,0,"    ⠈⠙⠻⠿⠿⠿⠿⠛⠉     "}},
-        {{0x66b6ff,0,"                  "}},
-        {{0xffffff,0,"     CYNOSURE     "}},
+{{0,0,"⠀⠀⠀"},{16711680,0,"⢀⣠⣴⣾⣿⣿⣿⣿⣶⣤⣀"},{0,0,"⠀⠀⠀⠀"}},{{0,0,"⠀"},{16711680,0,"⢀⣴⣿"},{16711680,16777215,"⠿"},{16711680,0,"⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄"},{0,0,"⠀⠀"}},{{16711680,0,"⢀⣾⣿⣿"},{0,16777215,"⠀⠀"},{16711680,16777215,"⠉"},{16711680,0,"⣿⣿⣿"},{16711680,16777215,"⡇⠈⠙⢻"},{16711680,0,"⣿⣿⣆"},{0,0,"⠀"}},{{16711680,0,"⣾⣿⣿⣿"},{0,16777215,"⠀⠀⠀"},{16711680,0,"⣿⣿⣿"},{16711680,16777215,"⡇"},{0,16777215,"⠀⠀"},{16711680,16777215,"⢸"},{16711680,0,"⣿⣿⣿⡆"}},{{16711680,0,"⣿⣿⣿⣿"},{0,16777215,"⠀⠀⠀"},{16711680,0,"⣿⣿⣿"},{16711680,16777215,"⡇"},{0,16777215,"⠀⠀"},{16711680,16777215,"⢸"},{16711680,0,"⣿⣿⣿⡇"}},{{16711680,0,"⢻⣿⣿⣿"},{16711680,16777215,"⡄"},{0,16777215,"⠀⠀"},{16711680,16777215,"⠈⠛⠋"},{0,16777215,"⠀⠀⠀"},{16711680,16777215,"⣼"},{16711680,0,"⣿⣿⣿⠃"}},{{0,0,"⠀"},{16711680,0,"⢻⣿⣿⣿"},{16711680,16777215,"⣦⡀"},{0,16777215,"⠀⠀⠀⠀"},{16711680,16777215,"⣠⣾"},{16711680,0,"⣿⣿⣿⠃"},{0,0,"⠀"}},{{0,0,"⠀⠀"},{16711680,0,"⠙⢿⣿⣿⣿"},{16711680,16777215,"⣷⣶⣶"},{16711680,0,"⣿⣿⣿⣿⠟⠁"},{0,0,"⠀⠀"}},{{0,0,"⠀⠀⠀⠀"},{16711680,0,"⠈⠙⠻⠿⠿⠿⠿⠛⠉"},{0,0,"⠀⠀⠀⠀⠀"}},{},{{0xffffff,0,"       ULOS       "}},
+        --#include "extra/bootsplash-ulos.lua"
       }
 
       local w, h = lgpu.maxResolution()
@@ -1111,11 +1101,11 @@ do
         return nil
       end
       if not self.closed then
-        while #self.rb < n do
+        while (not self.closed) and #self.rb < n do
           if self.from ~= 0 then
             k.scheduler.info().data.self.resume_next = self.from
           end
-          coroutine.yield()
+          coroutine.yield(1)
         end
       end
       local data = self.rb:sub(1, n)
@@ -1125,7 +1115,8 @@ do
 
     function _pipe:write(dat)
       if self.closed then
-        return nil
+        k.scheduler.signal(nil, k.scheduler.signals.pipe)
+        return nil, "broken pipe"
       end
       self.rb = self.rb .. dat
       return true
@@ -1146,7 +1137,7 @@ do
         to = 0, -- the process reading input
         rb = "",
       }, {__index = _pipe}), "rw")
-      new.buffer_mode = "none"
+      new.buffer_mode = "pipe"
       return new
     end
 
@@ -1402,7 +1393,7 @@ do
     [0] = {
       name = "root",
       home = "/root",
-      shell = "/bin/lsh",
+      shell = "/bin/sh",
       acls = 8191,
       pass = k.util.to_hex(k.sha3.sha256("root")),
     }
@@ -1941,8 +1932,11 @@ do
       return nil, fs.errors.file_not_found
     end
     
+    local handle, err = self.node.open(file, mode or "r")
+    if not handle then return nil, err or "failed opening file" end
+
     local fd = {
-      fd = self.node.open(file, mode or "r"),
+      fd = handle,
       node = self.node,
       read = fread,
       write = fwrite,
@@ -2055,7 +2049,7 @@ do
           ((mode == "w" or mode == "a") and not
           k.security.acl.has_permission(data.permissions, wperm))) and not
           k.security.acl.user_has_permission(user,
-          k.security.acl.permissions.OPEN_UNOWNED) then
+          k.security.acl.permissions.user.OPEN_UNOWNED) then
         return nil, "permission denied"
       end
     end
@@ -2313,7 +2307,7 @@ do
   local buffer = {}
  
   function buffer:read_byte()
-    if self.buffer_mode ~= "none" then
+    if self.buffer_mode ~= "none" and self.buffer_mode ~= "pipe" then
       if (not self.read_buffer) or #self.read_buffer == 0 then
         self.read_buffer = self.base:read(self.buffer_size)
       end
@@ -2427,7 +2421,11 @@ do
   end
 
   function buffer:read(...)
-    if self.closed or not self.mode.r then
+    if self.buffer_mode == "pipe" then
+      if self.closed and #self.base.rb == 0 then
+        return nil, "bad file descriptor"
+      end
+    elseif self.closed or not self.mode.r then
       return nil, "bad file descriptor"
     end
     
@@ -2510,6 +2508,7 @@ do
 
   function buffer:close()
     self:flush()
+    self.base:close()
     self.closed = true
   end
 
@@ -3218,10 +3217,9 @@ if (not k.cmdline.no_force_yields) then
     --[[
     { "if([ %(])(.-)([ %)])then([ \n])", "if%1%2%3then%4__internal_yield() " },
     { "elseif([ %(])(.-)([ %)])then([ \n])", "elseif%1%2%3then%4__internal_yield() " },
-    { "([ \n])else([ \n])", "%1else%2__internal_yield() " },]]
-    { "while([ %(])(.-)([ %)])do([ \n])", "while%1%2%3do%4__internal_yield() "},
-    { "for([ %(])(.-)([ %)])do([ \n])", "for%1%2%3do%4__internal_yield() " },
-    { "repeat([ \n])", "repeat%1__internal_yield() " },
+    { "([ \n])else([ \n])", "%1else%2__internal_yield() " },--]]
+    { "([%);\n ])do([ \n%(])", "%1do%2__internal_yield() "},
+    { "([%);\n ])repeat([ \n%(])", "%1repeat%2__internal_yield() " },
   }
 
   local old_load = load
@@ -3467,10 +3465,11 @@ do
   -- default signal handlers
   local defaultHandlers = {
     [0] = function() end,
-    [1] = function(self) self.status = "" self.dead = true end,
+    [1] = function(self) self.status = "got SIGHUP" self.dead = true end,
     [2] = function(self) self.status = "interrupted" self.dead = true end,
-    [3] = function(self) self.status = "" self.dead = true end,
-    [9] = function(self) self.dead = true end,
+    [3] = function(self) self.status = "got SIGQUIT" self.dead = true end,
+    [9] = function(self) self.status = "killed" self.dead = true end,
+    [13] = function(self) self.status = "broken pipe" self.dead = true end,
     [18] = function(self) self.stopped = true end,
   }
   
@@ -3552,7 +3551,9 @@ do
   local globalenv = {
     UID = 0,
     USER = "root",
-    TERM = "cynosure"
+    TERM = "cynosure",
+    PWD = "/",
+    HOSTNAME = "localhost"
   }
 
   local processes = {}
@@ -3565,6 +3566,7 @@ do
     interrupt = 2,
     quit = 3,
     kill = 9,
+    pipe = 13,
     stop = 17,
     kbdstop = 18,
     continue = 19
@@ -3665,6 +3667,10 @@ do
     return processes[pid]
   end
 
+  local function closeFile(file)
+    if file.close and not file.tty then pcall(file.close, file) end
+  end
+
   local function handleDeath(proc, exit, err, ok)
     local exit = err or 0
     err = err or ok
@@ -3696,6 +3702,7 @@ do
     for k, v in pairs(proc.handles) do
       pcall(v.close, v)
     end
+    for k,v in pairs(proc.io) do closeFile(v) end
 
     local ppt = "/proc/" .. math.floor(proc.pid)
     k.sysfs.unregister(ppt)
@@ -3736,7 +3743,7 @@ do
             going_to_run[v.resume_next.pid] = true
           end
         elseif v.dead then
-          handleDeath(v, v.exit_code or 1, v.status or "Killed")
+          handleDeath(v, v.exit_code or 1, v.status or "killed")
         end
       end
 
@@ -3912,6 +3919,13 @@ do
           return io.stderr
         end
       },
+      null = {
+        dir = false,
+        read = function(_, n)
+          return nil
+        end,
+        write = function() return true end
+      }
     },
     mounts = {
       dir = false,
@@ -4618,11 +4632,12 @@ do
     if not self.base then
       return nil, "_base_stream is closed"
     end
-    local data = ""
+    local data, iter = "", 0
     repeat
       local chunk = self.base.read(n - #data)
       data = data .. (chunk or "")
-    until (not chunk) or #data == n
+      if chunk and #chunk == 0 then iter = iter + 1 os.sleep(0) end
+    until (not chunk) or #data == n or iter > 10
     if #data == 0 then return nil end
     return data
   end
@@ -5020,6 +5035,9 @@ do
   k.log(k.loglevels.info, "Creating userspace sandbox")
   
   local sbox = k.util.copy_table(_G)
+  setmetatable(sbox, {})
+  setmetatable(sbox.string, {})
+  sbox.struct = nil
   
   k.userspace = sbox
   sbox._G = sbox

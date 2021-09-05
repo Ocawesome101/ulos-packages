@@ -1,0 +1,4 @@
+author="Ocawesome101"
+description="The Bourne-ish Shell"
+version=1.0
+depends={"corelibs"}

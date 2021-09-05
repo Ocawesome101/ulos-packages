@@ -69,7 +69,7 @@ function search(cfg, opts, name, re)
       cfg.General.dataDirectory, k .. ".list"))
     if not data then
       log(opts, pfx.warn, "list ", k, " is nonexistent; run 'upm update' to refresh")
-      log(opts, pfx.warn, "(err: ", err, ")")
+      if err then log(opts, pfx.warn, "(err: ", err, ")") end
     else
       local found
       if data.packages[name] then
@@ -258,6 +258,31 @@ local function install(cfg, opts, packages)
     resolve(packages[i])
   end
 
+  log(opts, pfx.info, "checking for package conflicts")
+  for k, v in pairs(to_install) do
+    for _k, _v in pairs(installed) do
+      if _v.info.conflicts then
+        for __k, __v in pairs(_v.info.conflicts) do
+          if k == __v then
+            log(opts, pfx.err, "installed package ", _k, " conflicts with package ", __v)
+            os.exit(1)
+          end
+        end
+      end
+    end
+    if v.data.conflicts then
+      for _k, _v in pairs(v.data.conflicts) do
+        if installed[_v] then
+          log(opts, pfx.err, "package ", k, " conflicts with installed package ", _v)
+          os.exit(1)
+        elseif _v ~= k and to_install[_v] then
+          log(opts, pfx.err, "cannot install conflicting packages ", k, " and ", _v)
+          os.exit(1)
+        end
+      end
+    end
+  end
+
   local largest = 0
   log(opts, pfx.info, "packages to install:")
   for k, v in pairs(to_install) do
@@ -331,7 +356,7 @@ end
 function lib.upgrade(cfg, opts)
   local to_upgrade = {}
   for k, v in pairs(installed) do
-    local data, repo = search(k)
+    local data, repo = search(cfg, opts, k)
     if not (installed[k] and installed[k].info.version >= data.version
         and not opts.f) then
       log(opts, pfx.info, "updating ", k)
@@ -366,7 +391,7 @@ function lib.cli_list(cfg, opts, args)
         cfg.General.dataDirectory, k .. ".list"))
       if not data then
         log(pfx.warn, "list ", k, " is nonexistent; run 'upm update' to refresh")
-        log(pfx.warn, "(err: ", err, ")")
+        if err then log(pfx.warn, "(err: ", err, ")") end
       else
         for p in pairs(data.packages) do
           print(p)
@@ -378,7 +403,7 @@ function lib.cli_list(cfg, opts, args)
       cfg.General.dataDirectory, args[1] .. ".list"))
     if not data then
       log(pfx.warn, "list ", args[1], " is nonexistent; run 'upm update' to refresh")
-      log(pfx.warn, "(err: ", err, ")")
+      if err then log(pfx.warn, "(err: ", err, ")") end
     else
       for p in pairs(data.packages) do
         print(p)

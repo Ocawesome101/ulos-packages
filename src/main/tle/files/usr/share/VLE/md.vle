@@ -1,0 +1,4 @@
+# basic markdown highlighting
+
+strings ` # markdown has no strings, so treat codeblocks as strings.  why not?
+keychars -*[]()
