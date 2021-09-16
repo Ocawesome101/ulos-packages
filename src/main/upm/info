@@ -1,4 +1,3 @@
 author="Ocawesome101"
-version=1.60
 description="The ULOS Package Manager"
 dependencies={"corelibs"}

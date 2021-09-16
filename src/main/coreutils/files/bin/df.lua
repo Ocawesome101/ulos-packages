@@ -26,7 +26,7 @@ local files = filesystem.list(fscpath)
 
 table.sort(files)
 
-print("      fs     name    total     used     free")
+print("      fs      name    total     used     free")
 
 local function readFile(f)
   local handle = assert(io.open(f, "r"))
@@ -50,7 +50,7 @@ local function printInfo(fs)
     total = size.format(total)
   end
 
-  print(string.format("%8s %8s %8s %8s %8s", addr, name, total, used, free))
+  print(string.format("%8s %9s %8s %8s %8s", addr, name, total, used, free))
 end
 
 for i, file in ipairs(files) do

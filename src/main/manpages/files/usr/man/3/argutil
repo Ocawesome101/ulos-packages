@@ -2,13 +2,20 @@
   argutil - argument parsing utilities
 
 *{DESCRIPTION}
-  ${argutil} provies a basic OpenOS-style argument parser to all programs.  It is primarily intended to prevent most programs from requiring their own argument parser.
+  ${argutil} provies a generic argument parsing utility for all programs.  It is primarily intended to prevent most programs from requiring their own argument parser.
 
 *{FUNCTIONS}
   blue{parse}(magenta{...}): green{table}, green{table}
-    Sort the varargs into green{args} and green{opts}, then return them in that order.  This will work for most things.  When blue{parse} encounters a yellow{--}, it will stop looking for options and dump any remaining varargs into the green{args} table.
+    An *{OpenOS}-style argument parser.  For more advanced parsing, see blue{getopt}() below.
+
+    blue{parse}() sorts the varargs into green{args} and green{opts}, then returns them in that order.  When blue{parse} encounters a yellow{--}, it will stop looking for options and dump any remaining varargs into the green{args} table.
 
     green{args} is simply an array of arguments;  green{opts} is a map, such that green{opts}[*{option}] blue{=} *{value}.
+
+  blue{getopt}(green{opts}, magenta{...}): green{table}, green{table}
+    A more advanced argument processor than blue{parse}().
+
+    The green{opts} table must contain one green{opts} table, whose keys are the names of options and whose values are a magenta{boolean} specifying whether that option takes a single argument.  green{opts} may also specify the magenta{exit_on_bad_opt} option to exit if an unrecognized option is given, and a magenta{allow_finish} boolean to allow a *{--} argument to stop option processing.
 
 *{COPYRIGHT}
   ULOS Core Libraries copyright (c) 2021 Ocawesome101 under the DSLv2.

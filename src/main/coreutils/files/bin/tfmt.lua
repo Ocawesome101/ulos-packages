@@ -33,7 +33,8 @@ local colors = {
   blue = "94",
   magenta = "95",
   cyan = "96",
-  white = "97"
+  white = "97",
+  gray = "90",
 }
 
 local patterns = {
@@ -48,6 +49,7 @@ local patterns = {
   {"magenta({..-})", "magenta"},
   {"cyan({..-})", "cyan"},
   {"white({..-})", "white"},
+  {"gray({..-})", "gray"},
 }
 
 opts.wrap = tonumber(opts.wrap)

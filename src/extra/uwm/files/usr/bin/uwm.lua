@@ -10,7 +10,12 @@ local gpu = tty.getgpu(io.stderr.tty)
 local screen = gpu.getScreen()
 
 if gpu.isProxy then
-  io.stderr:write("\27[91mwm: not nestable\n\27[0m")
+  io.stderr:write("\27[91muwm: not nestable\n\27[0m")
+  os.exit(1)
+end
+
+if not gpu.bitblt then
+  io.stderr:write("\27[91muwm: requires GPU buffers\n\27[0m")
   os.exit(1)
 end
 

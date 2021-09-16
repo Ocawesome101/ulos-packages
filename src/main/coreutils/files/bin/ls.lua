@@ -201,6 +201,7 @@ if #args == 0 then
   args[1] = os.getenv("PWD")
 end
 
+local ex = 0
 for i=1, #args, 1 do
   if #args > 1 then
     if i > 1 then
@@ -212,5 +213,8 @@ for i=1, #args, 1 do
   local ok, err = list(args[i])
   if not ok and err then
     io.stderr:write("ls: ", err, "\n")
+    ex = 1
   end
 end
+
+os.exit(ex)

@@ -39,11 +39,27 @@ local function wc(f)
   local out = {}
 
   if opts.l then
-    out[#out+1] = tostring(select(2, data:gsub("\n", "")))
+    local last = 0
+    local val = 0
+    while true do
+      local nex = data:find("\n", last)
+      if not nex then break end
+      val = val + 1
+      last = nex + 1
+    end
+    out[#out+1] = tostring(val)
   end
 
   if opts.w then
-    out[#out+1] = tostring(select(2, data:gsub("[ \n\t\r]+", "")))
+    local last = 0
+    local val = 0
+    while true do
+      local nex, nen = data:find("[ \n\t\r]+", last)
+      if not nex then break end
+      val = val + 1
+      last = nen + 1
+    end
+    out[#out+1] = tostring(val)
   end
 
   if opts.c then

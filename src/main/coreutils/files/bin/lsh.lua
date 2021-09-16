@@ -318,6 +318,8 @@ Options:
   end
 }
 
+-- shebang support is still here despite its also being implemented in the kernel
+-- mostly so the shell can resolve the shebang command paths.
 local shebang_pattern = "^#!(/.-)\n"
 
 local function loadCommand(path, h, nowait)

@@ -19,7 +19,7 @@ rm $PKGLIST
 mkdir -p $(dirname $PKGLIST)
 
 echo "{" >> $PKGLIST
-for package in $(echo cldr cynosure usysd coreutils corelibs gpuproxy installer upm); do
+for package in $(echo cldr cynosure usysd coreutils corelibs gpuproxy installer upm bsh); do
 	echo $package
 	addpkg main/$package #1>/dev/null
 done

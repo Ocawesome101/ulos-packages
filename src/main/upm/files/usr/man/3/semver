@@ -1,0 +1,46 @@
+*{NAME}
+  semver - semantic versioning parser
+
+*{DESCRIPTION}
+  ${semver} is a fairly strict parser for semantic versioning *{2.0.0}.  A brief summary of the semantic versioning specification, as taken from @{https://semver.org/spec/v2.0.0.html}:
+
+    Given a version number *{MAJOR}.*{MINOR}.*{PATCH}, increment the:
+      1. *{MAJOR} version when you make incompatible API changes;
+      2. *{MINOR} version when you add functionality in a backwards compatible manner, and
+      3. *{PATCH} version when you make backwards compatible bug fixes.
+    Addiional labels for pre-release and build metadata are available as extensions to the *{MAJOR}.*{MINOR}.*{PATCH} format.
+
+  The basic format for a semver-compliant version is
+
+    MAJOR*{.}MINOR*{.}PATCH*{-}pre-release information*{+}build metadata.  The *{pre-release information} and *{build metadata} fields are optional.
+
+*{FUNCTIONS}
+  Following Lua convention, functions will in the case of failure return magenta{nil} and a red{string} describing the error.
+
+  Several functions in the ${semver} library expect one or more green{version} objects as an argument.
+  
+  green{version} object format:
+    A green{version} object is a table with the following fields (entries surrounded with square brackets [] are optional.
+
+      green{{}
+        *{major} = magenta{number},
+        *{minor} = magenta{number},
+        *{patch} = magenta{number},
+        [*{prerelease} = red{string} or green{table},]
+        [*{build} = red{string} or green{table}]
+      green{}}
+
+  blue{build}(green{version}): red{string}
+    Converts the provided green{version} into a human-readable red{string} form.  If the yellow{prerelease} or yellow{build} fields are a green{table}, they will be concatenated with a red{"."}.  In all cases, if present and not empty, they will be concatenated to the end of the returned version string following their corresponding separator (*{-} for pre-release information, and *{+} for build metadata).
+
+  blue{parse}(*{version}:red{string}): green{version}
+    Deconstructs the provided red{version} string, and returns a green{version} object matching it.  If no yellow{prerelease} or yellow{build} information is abailable, the corresponding tables will be empty.
+
+  blue{isGreater}(*{ver1}:green{version}, *{ver2}:green{version}): magenta{boolean}
+    Checks whether the provided green{ver1} is greater than the provided green{ver2} and returns a boolean accordingly.
+
+*{COPYRIGHT}
+  Semantic version parsing library copyright (c) 2021 Ocawesome101 under the DSlv2.  Semantic versioning specification copyright (c) Tom Preston-Werner under Creative Commons -- CC BY 3.0.
+
+*{REPORTING BUGS}
+  Please report bugs with the ${semver} library at @{https://github.com/ocawesome101/oc-ulos/issues}.  Leave feedback on semantic versioning at @{https://github.com/semver/semver/issues}.

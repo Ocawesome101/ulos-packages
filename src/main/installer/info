@@ -1,4 +1,3 @@
 author="Ocawesome101"
-version=0.60
 description="ULOS installers"
 dependencies={"corelibs","coreutils","upm","gpuproxy"}

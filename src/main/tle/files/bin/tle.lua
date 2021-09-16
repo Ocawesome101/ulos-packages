@@ -427,7 +427,7 @@ end
 local commands -- forward declaration so commands and load_file can access this
 local function load_file(file)
   local n = #buffers + 1
-  buffers[n] = {name=file, cline = 1, cpos = 0, scroll = 1, lines = {}, cache = {}}
+  buffers[n] = {name=file, cline = 1, cpos = 0, scroll = 0, lines = {}, cache = {}}
   local handle = io.open(file, "r")
   cbuf = n
   if not handle then
@@ -439,9 +439,9 @@ local function load_file(file)
                                      (line:gsub("[\r\n]", ""):gsub("\t", "  "))
   end
   handle:close()
-  buffers[n].cline = math.min(#buffers[n].lines,
+  --[[buffers[n].cline = math.min(#buffers[n].lines,
     get_last_pos(get_abs_path(file)))
-  buffers[n].scroll = math.min(1, buffers[n].cline - h)
+  buffers[n].scroll = math.min(1, buffers[n].cline - h)]]
   if commands and commands.t then commands.t() end
 end
 

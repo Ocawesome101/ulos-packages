@@ -1,0 +1,35 @@
+*{NAME}
+  tle - The Lua Editor
+
+*{SYNOPSIS}
+  ${tle} *{FILE ...}
+
+*{DESCRIPTION}
+  ${tle} is a highly optimized text editor written entirely using standard Lua libraries.  It supports reasonably advanced per-buffer syntax highlighting based on file extension.  It will also try to determine which highlighter should be used based on any shebang present in the file.
+
+  ${tle} displays a tab-bar along the top of the screen and line numbers down the left side.  The tab-bar displays the name of each buffer (trimmed to 16 characters), followed by an asterisk (*{*}) if that buffer contains unsaved changes.  Each open file is contained in one buffer.
+
+  ${tle} accepts the following keyboard shortcuts.  Otherwise, navigate ${tle} as you would OpenOS's *{edit}.
+    *{ctrl-N}   Open a new buffer.  Will prompt for a file name and load the file into the new buffer if it exists.
+    *{ctrl-V}   Switch to the previous buffer.
+    *{ctrl-B}   Switch to the next buffer.
+    *{ctrl-S}   Save the current buffer to a file matching its name.  Never prompts for a file name.
+    *{ctrl-Q}   Quit ${tle}, prompting if there are unsaved changes in any buffers.
+    *{ctrl-W}   Close the current buffer, prompting for confirmation if there are unsaved changes.
+
+    *{ctrl-G}   Jump to the specified line.
+    *{ctrl-F}   Find the specified pattern.  If no pattern is specified, uses the previous pattern entered in the current session.
+    *{ctrl-R}   Find and replace.  Prompts twice, first for the search pattern and then for the replace pattern.  Uses blue{string.gsub} internally, so all Lua patterns are valid.
+    *{ctrl-K}   Remove lines from the buffer starting at the current line.  If the entered number of lines is magenta{0}, deletes no lines.  If the number of lines between the current line and the end of the buffer is less than the entered number of lines, it will only delete the lines from the current line to the end of the file.
+
+    *{ctrl-T}   Reload the syntax highlighter for the current file, and completely re-render the buffer.  Useful when testing highlighters or if experiencing visual bugs.
+
+*{FILES}
+  #{/usr/share/VLE}
+    Syntax highlighting files are located here, at *{EXTENSION}#{.vle}.  See *{vle}(*{7})
+
+*{COPYRIGHT}
+  The Lua Editor is copyright (c) 2020 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Please report bugs at @{https://github.com/ocawesome101/tle/issues}.

@@ -1,0 +1,102 @@
+*{NAME}
+  bsh - Better Shell
+
+*{SYNOPSIS}
+  ${bsh} *{-l}|*{--login}
+  ${bsh}
+
+*{DESCRIPTION}
+  ${bsh} is a Bourne-like shell.  It is a significantly improved, and in fact rewritten, version of the *{sh} shell shipped with ULOS prior to Release 1.7.  It supports piping, input/output redirection, command aliases, basic glob expansion, and substitution.
+
+  ${bsh} is prioritized over *{lsh}(*{1}) by the *{sh}(*{1}) utility, if it is installed.  *{lsh} is still available, and may be set as a user's default shell with the *{passwd}(*{1}) utility.
+
+*{SYNTAX}
+  This section contains explanations of the syntax of ${bsh}.  It should be familiar to those familiar with the Bourne shell.
+
+  *{Environment Variable Substitution}
+  Environment variables may be subsituted with the *{$}*{{}*{VARIABLE_NAME}*{}} syntax for variables whose names contain characters outside of the *{[0-9a-zA-z_]} range, and *{$VARIABLE_NAME} for those variables whose names do not contain such characters.  For example, the variable *{foo-bar} must be substituted with *{$}*{{}*{foo-bar}*{}}, whereas the variable *{baz} may be substituted with *{$baz}.
+
+  *{Command Aliases}
+  Aliases may be defined with the *{alias} builtin;  see *{BUILTINS} below.
+
+  *{Glob Expansion}
+  Globs with the *{*} character are supported in place of a filename, or the end of a filename at the end of a path specifier, or in place of a directory name anywhere else.  Thus, the following cases are valid:
+
+    #{/bin/}*{*}
+    #{/lib/}*{*}#{/test}
+    #{/tmp/part*}
+
+  The following case is not valid and will result in undefined behavior:
+
+    #{/example/part}*{*}#{/foo}
+
+  *{Piping}
+  ${bsh} supports piping the output of program *{foo} into the input of program *{bar} with the following syntax:
+    
+    ${foo} *{|} ${bar}
+
+  These chains may be extended indefinitely.
+
+  *{I/O Redirection}
+  A program *{foo}'s input may be directed to an arbitrary file #{f}, where replacing the single *{>} with a double *{>>} will append to the file #{f} rather than overwriting it.
+
+    ${foo} *{>} #{f}
+
+  Similarly, a program *{bar}'s output may be pointed to a file #{f} with the *{<} operator:
+
+    ${bar} *{<} #{f}
+
+  *{Comments}
+  Comments extend from the first *{#} found in a line to the end of that line.
+
+  *{Command Chains}
+  ${bsh} supports the *{&&} operator for conditional program execution.  Combined with input/output redirection and piping (see the corresponding sections above) this can be quite powerful.  Program invocations may be separated with a *{;}, as such:
+
+    ${foo}*{;} ${bar} a b c*{;} ${baz}
+
+*{SHELL BUILTINS}
+  ${bsh} contains a small set of built-in commands.  It will only create a process for a builtin command if that command's input or output is being redirected.
+
+  The following is a short description of each builtin command:
+
+    *{builtins}
+      Print each available built-in command.
+
+    *{cd}
+      Change the current working directory.  If no argument is given, changes to *{$HOME};  if the argument given is *{-}, changes to *{$OLDPWD}.
+
+    *{set}
+      If no arguments are provided, prints the value of all environment variables.  Otherwise, for each argument matching *{key}=*{value}, sets the environment variable *{key}'s value to *{value}.
+      
+    *{unset}
+      Unsets each provided environment variable.
+
+    *{alias}
+      If no arguments are provided, prints all aliases specified in the current shell.  Otherwise, for each argument, if that argument matches *{key}=*{value}, aliases *{key} to *{value};  otherwise, if the argument is a valid alias, prints it and its value.
+
+    *{unalias}
+      Unsets each provided alias.
+
+    *{kill}
+      Kills processes.  Valid options are: *{sighup}, *{sigint}, *{sigquit}, *{sigpipe}, *{sigstop}, *{sigcont}, or otherwise any signal defined by the *{process}(*{3}) library.
+
+    *{exit}
+      Exits the current ${bsh} session.  The shell's exit status is 0 or, if present, the first argument converted to a number.
+
+    *{logout}
+      Exits a login shell.
+
+    *{pwd}
+      Prints the current working directory (i.e. the value of *{$PWD}).
+
+    *{true}
+      Exits with a status of 0.
+
+    *{false}
+      Exits with a status of 1.
+
+*{COPYRIGHT}
+  Better Shell copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Please report bugs at @{https://github.com/ocawesome101/oc-ulos/issues}.

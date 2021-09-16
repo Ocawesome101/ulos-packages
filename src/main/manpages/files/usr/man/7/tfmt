@@ -18,7 +18,7 @@
     cyan{cyan}     VT100 color 96
     white{white}    VT100 color 97
     *{*}        Bold (identical to *{white})
-    ${$}        Italic (identical to ${cyan})
+    ${$}        Italic (VT100 color 36)
     @{@}        Link (identical to @{blue})
     #{#}        File (identical to #{yellow})
 

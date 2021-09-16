@@ -1,0 +1,46 @@
+*{NAME}
+  lshw - list hardware information
+
+*{SYNOPSIS}
+  ${lshw} [*{-fcCdpswv}] [<*{-F|--filter}> *{CLASS}] [*{COMPONENT} [*{...}]]
+  ${lshw} <*{-o}|*{--openos}> [*{COMPONENT_TYPE} [*{...}]]
+
+*{DESCRIPTION}
+  ${lshw} iterates through all available devices in the computer and displays information about them according to the options given.  If no options are specified, ${lshw} will behave as though it was given *{-fCcdpwvs}.  All *{COMPONENT} arguments may be either a component address (full or partial) or a component type.  These specify which components to print.
+
+  Supported options are:
+    *{f}, *{--full}
+      Print all information about all matching components.
+    
+    *{-o}, *{--openos}
+      Behave similarly to OpenOS's ${components} command, and ignore all other options.
+
+    *{-F}, *{--filter} red{CLASS}
+      Filter for the specified red{CLASS} of component.
+
+    *{-c}, *{--class}
+      Enable printing of class information.
+
+    *{-C}, *{--capacity}
+      Enable printing of capacity information, if applicable.
+
+    *{-d}, *{--description}
+      Enable printing of a component's description.
+
+    *{-p}, *{--product}
+      Enable printing of a component's "product" type
+
+    *{-w}, *{--width}
+      Enable printing of components' bit width, if applicable.
+
+    *{-v}, *{--vendor}
+      Enable printing of vendor information.
+
+    *{-s}, *{--clock}
+      Enable printing of clock rates, if applicable.
+
+*{COPYRIGHT}
+  ULOS Coreutils copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Bugs should be reported at @{https://github.com/ocawesome101/oc-ulos/issues}.

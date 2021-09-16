@@ -1,0 +1,39 @@
+*{NAME}
+  vle - VLE syntax highlighting scheme
+
+*{DESCRIPTION}
+  This manual page documents the simple syntax highlighting definitions used in *{tle}(*{1}) and *{vle}.
+
+  The basic syntax of a definition:
+
+    gray{# this is a comment}
+    red{keywordtype} white{word1 word2 word3}
+
+  The supported red{keywordtype}s, and what they define, are as follows:
+  
+    red{comment} white{prefix}
+      Defines the single supported comment prefix.
+
+    red{const}
+      Defines language constants.
+
+    red{keychars}
+      Defines key characters.  These may optionally be separated by spaces, but it is not required.
+
+    red{operator}
+      Defines language operators (groups of one or more keychars, e.g. *{+=} or *{+}).
+
+    red{keywords}
+      Defines language keywords (e.g. red{local}).
+
+    red{constpat}
+      Defines a pattern against which tokens may be matched for constants.  This is useful for highlighting numbers, for example.
+
+    red{builtin}
+      Defines language builtins.
+
+*{COPYRIGHT}
+  Visual Lua Editor syntax highlighting scheme copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{SEE ALSO}
+  *{tle}(*{1})

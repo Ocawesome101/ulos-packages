@@ -1,5 +1,4 @@
 author="Ocawesome101"
 description="A SystemD-inspired init system written for ULOS"
-version=1.04
 depends={"corelibs"}
 conflicts={"refinement"}

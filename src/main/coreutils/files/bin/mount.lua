@@ -42,7 +42,15 @@ DSLv2.
 end
 
 if #args == 0 then
-  io.write(readFile("/sys/mounts"))
+  for line in io.lines("/sys/mounts", "l") do
+    local path, thing = line:match("(.-): (.+)")
+    if not thing:match("........%-....%-....%-....%-............") then
+      thing = string.format("%q", thing)
+    end
+    if path and thing then
+      print(string.format("%s on %s", thing, path))
+    end
+  end
   os.exit(0)
 end
 

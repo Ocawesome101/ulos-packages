@@ -63,6 +63,8 @@ if #args > 1 then -- multiple sources, dest has to be a directory
   end
 end
 
+local disdir = not not (filesystem.stat(dest) or {}).isDirectory
+
 local function cp(f)
   local file = path.canonical(f)
   
@@ -94,7 +96,7 @@ local function cp(f)
     end
   else
     local dst = dest
-    if #args > 1 then
+    if #args > 1 or disdir then
       local segments = path.split(file)
       dst = path.concat(dest, segments[#segments])
     end

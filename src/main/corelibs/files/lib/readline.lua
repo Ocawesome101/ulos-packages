@@ -106,7 +106,8 @@ local function readline(opts)
         cpos = 0
       elseif key == "d" and not opts.noexit then
         io.write("\n")
-        os.exit()
+        ; -- this is a weird lua quirk
+        (type(opts.exit) == "function" and opts.exit or os.exit)()
       elseif key == "i" then -- tab
         if type(opts.complete) == "function" and cpos == 0 then
           local obuffer = buffer

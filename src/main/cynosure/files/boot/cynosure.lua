@@ -36,33 +36,142 @@ end
 
 do
   k._NAME = "Cynosure"
-  k._RELEASE = "1.72"
-  k._VERSION = "2021.09.05-default"
+  k._RELEASE = "1.8"
+  k._VERSION = "2021.09.16-default"
   _G._OSVERSION = string.format("%s r%s-%s", k._NAME, k._RELEASE, k._VERSION)
 end
 --#include "base/version.lua"
 -- object-based tty streams --
 
 do
-  local colors = {
-    0x000000,
-    0xaa0000,
-    0x00aa00,
-    0xaa5500,
-    0x0000aa,
-    0xaa00aa,
-    0x00aaaa,
-    0xaaaaaa,
-    0x555555,
-    0xff5555,
-    0x55ff55,
-    0xffff55,
-    0x5555ff,
-    0xff55ff,
-    0x55ffff,
-    0xffffff
+  local color_profiles = {
+    { -- default VGA colors
+      0x000000,
+      0xaa0000,
+      0x00aa00,
+      0xaa5500,
+      0x0000aa,
+      0xaa00aa,
+      0x00aaaa,
+      0xaaaaaa,
+      0x555555,
+      0xff5555,
+      0x55ff55,
+      0xffff55,
+      0x5555ff,
+      0xff55ff,
+      0x55ffff,
+      0xffffff
+    },
+    { -- Breeze theme colors from Konsole
+      0x232627,
+      0xed1515,
+      0x11d116,
+      0xf67400,
+      0x1d99f3,
+      0x9b59b6,
+      0x1abc9c,
+      0xfcfcfc,
+      -- intense variants
+      0x7f8c8d,
+      0xc0392b,
+      0x1cdc9a,
+      0xfdbc4b,
+      0x3daee9,
+      0x8e44ad,
+      0x16a085,
+      0xffffff
+    },
+    { -- Gruvbox
+      0x282828,
+      0xcc241d,
+      0x98971a,
+      0xd79921,
+      0x458588,
+      0xb16286,
+      0x689d6a,
+      0xa89984,
+      0x928374,
+      0xfb4934,
+      0xb8bb26,
+      0xfabd2f,
+      0x83a598,
+      0xd3869b,
+      0x8ec07c,
+      0xebdbb2
+    },
+    { -- Gruvbox light, for those crazy enough to want a light theme
+      0xfbf1c7,
+      0xcc241d,
+      0x98971a,
+      0xd79921,
+      0x458588,
+      0xb16286,
+      0x689d6a,
+      0x7c6f64,
+      0x928374,
+      0x9d0006,
+      0x79740e,
+      0xb57614,
+      0x076678,
+      0x8f3f71,
+      0x427b58,
+      0x3c3836
+    },
+    { -- PaperColor light
+      0xeeeeee,
+      0xaf0000,
+      0x008700,
+      0x5f8700,
+      0x0087af,
+      0x878787,
+      0x005f87,
+      0x444444,
+      0xbcbcbc,
+      0xd70000,
+      0xd70087,
+      0x8700af,
+      0xd75f00,
+      0xd75f00,
+      0x005faf,
+      0x005f87
+    },
+    { -- Pale Night
+      0x292d3e,
+      0xf07178,
+      0xc3e88d,
+      0xffcb6b,
+      0x82aaff,
+      0xc792ea,
+      0x89ddff,
+      0xd0d0d0,
+      0x434758,
+      0xff8b92,
+      0xddffa7,
+      0xffe585,
+      0x9cc4ff,
+      0xe1acff,
+      0xa3f7ff,
+      0xffffff,
+    }
   }
+  local colors = color_profiles[1]
 
+  if type(k.cmdline["tty.profile"]) == "number" then
+    colors = color_profiles[k.cmdline["tty.profile"]] or color_profiles[1]
+  end
+
+  if type(k.cmdline["tty.colors"]) == "string" then
+    for color in k.cmdline["tty.colors"]:gmatch("[^,]+") do
+      local idx, col = color:match("(%x):(%x%x%x%x%x%x)")
+      if idx and col then
+        idx = tonumber(idx, 16) + 1
+        col = tonumber(col, 16)
+        colors[idx] = col or colors[idx]
+      end
+    end
+  end
+  
   local len = unicode.len
   local sub = unicode.sub
 
@@ -235,33 +344,41 @@ do
     while i <= #args do
       local n = args[i]
       if n == 0 then
-        self.fg = colors[8]
-        self.bg = colors[1]
-        self.gpu.setForeground(self.fg)
-        self.gpu.setBackground(self.bg)
+        self.fg = 7
+        self.bg = 0
+        self.fgp = true
+        self.bgp = true
+        self.gpu.setForeground(self.fg, true)
+        self.gpu.setBackground(self.bg, true)
         self.attributes.echo = true
       elseif n == 8 then
         self.attributes.echo = false
       elseif n == 28 then
         self.attributes.echo = true
       elseif n > 29 and n < 38 then
-        self.fg = colors[n - 29]
-        self.gpu.setForeground(self.fg)
+        self.fg = n - 30
+        self.fgp = true
+        self.gpu.setForeground(self.fg, true)
       elseif n == 39 then
-        self.fg = colors[8]
-        self.gpu.setForeground(self.fg)
+        self.fg = 7
+        self.fgp = true
+        self.gpu.setForeground(self.fg, true)
       elseif n > 39 and n < 48 then
-        self.bg = colors[n - 39]
-        self.gpu.setBackground(self.bg)
+        self.bg = n - 40
+        self.bgp = true
+        self.gpu.setBackground(self.bg, true)
       elseif n == 49 then
-        self.bg = colors[1]
-        self.gpu.setBackground(self.bg)
+        self.bg = 0
+        self.bgp = true
+        self.gpu.setBackground(self.bg, true)
       elseif n > 89 and n < 98 then
-        self.fg = colors[n - 81]
-        self.gpu.setForeground(self.fg)
+        self.fg = n - 82
+        self.fgp = true
+        self.gpu.setForeground(self.fg, true)
       elseif n > 99 and n < 108 then
-        self.bg = colors[n - 91]
-        self.gpu.setBackground(self.bg)
+        self.bg = n - 92
+        self.bgp = true
+        self.gpu.setBackground(self.bg, true)
       elseif n == 38 then
         i = i + 1
         if not args[i] then return end
@@ -273,6 +390,7 @@ do
           if not b then return end
           i = i + 3
           self.fg = (r << 16) + (g << 8) + b
+          self.fgp = false
           self.gpu.setForeground(self.fg)
         end
       elseif n == 48 then
@@ -286,6 +404,7 @@ do
           if not b then return end
           i = i + 3
           self.bg = (r << 16) + (g << 8) + b
+          self.bgp = false
           self.gpu.setBackground(self.bg)
         end
       end
@@ -304,7 +423,7 @@ do
   function commands:S(args)
     local n = args[1] or 1
     self.gpu.copy(1, n, self.w, self.h, 0, -n)
-    self.gpu.fill(1, self.h, self.w, n, " ")
+    self.gpu.fill(1, self.h - o, self.w, n, " ")
   end
 
   function commands:T(args)
@@ -437,12 +556,17 @@ do
     -- TODO: cursor logic is a bit brute-force currently, there are certain
     -- TODO: scenarios where cursor manipulation is unnecessary
     if self.attributes.cursor then
-      local c, f, b = gpu.get(self.cx, self.cy)
-      gpu.setForeground(b)
-      gpu.setBackground(f)
+      local c, f, b, pf, pb = gpu.get(self.cx, self.cy)
+      if pf then
+        gpu.setForeground(pb, true)
+        gpu.setBackground(pf, true)
+      else
+        gpu.setForeground(b)
+        gpu.setBackground(f)
+      end
       gpu.set(self.cx, self.cy, c)
-      gpu.setForeground(self.fg)
-      gpu.setBackground(self.bg)
+      gpu.setForeground(self.fg, self.fgp)
+      gpu.setBackground(self.bg, self.bgp)
     end
     
     -- lazily convert tabs
@@ -458,14 +582,14 @@ do
         local esc_end = str:find("[a-zA-Z]")
 
         if not esc_end then
-          self.esc = string.format("%s%s", self.esc, str)
+          self.esc = self.esc .. str
         else
           self.in_esc = false
 
           local finish
           str, finish = pop(str, esc_end, true)
 
-          local esc = string.format("%s%s", self.esc, finish)
+          local esc = self.esc .. finish
           self.esc = ""
 
           local separator, raw_args, code = esc:match(
@@ -511,13 +635,20 @@ do
     end
 
     if self.attributes.cursor then
-      c, f, b = gpu.get(self.cx, self.cy)
+      c, f, b, pf, pb = gpu.get(self.cx, self.cy)
     
-      gpu.setForeground(b)
-      gpu.setBackground(f)
+      if pf then
+        gpu.setForeground(pb, true)
+        gpu.setBackground(pf, true)
+      else
+        gpu.setForeground(b)
+        gpu.setBackground(f)
+      end
       gpu.set(self.cx, self.cy, c)
-      gpu.setForeground(self.fg)
-      gpu.setBackground(self.bg)
+      if pf then
+        gpu.setForeground(self.fg, self.fgp)
+        gpu.setBackground(self.bg, self.bgp)
+      end
     end
     
     return true
@@ -638,7 +769,7 @@ do
     end
     
     if not self.attributes.xoff then
-      self.rb = string.format("%s%s", self.rb, char)
+      self.rb = self.rb .. char
     end
   end
 
@@ -713,14 +844,19 @@ do
       proxy = gpu
     end
 
-    proxy.setForeground(colors[8])
-    proxy.setBackground(colors[1])
+    -- set the gpu's palette
+    for i=1, #colors, 1 do
+      proxy.setPaletteColor(i - 1, colors[i])
+    end
+
+    proxy.setForeground(7, true)
+    proxy.setBackground(0, true)
 
     proxy.setDepth(proxy.maxDepth())
     -- optimizations for no color on T1
     if proxy.getDepth() == 1 then
       local fg, bg = proxy.setForeground, proxy.setBackground
-      local f, b = colors[1], colors[8]
+      local f, b = 7, 0
       function proxy.setForeground(c)
         -- [[
         if c >= 0xAAAAAA or c <= 0x000000 and f ~= c then
@@ -752,8 +888,10 @@ do
       esc = "", -- the escape sequence buffer
       cx = 1, -- the cursor's X position
       cy = 1, -- the cursor's Y position
-      fg = colors[8], -- the current foreground color
-      bg = colors[1], -- the current background color
+      fg = 7, -- the current foreground color
+      bg = 0, -- the current background color
+      fgp = true, -- whether the foreground color is a palette index
+      bgp = true, -- whether the background color is a palette index
       rb = "", -- a buffer of characters read from the input
       wb = "", -- line buffering at its finest
     }, {__index = _stream})
@@ -810,6 +948,7 @@ do
         v.callback(table.unpack(sig))
       end
     end
+    if sig ~= "*" then event.handle("*") end
   end
 
   local n = 0
@@ -1115,7 +1254,7 @@ do
 
     function _pipe:write(dat)
       if self.closed then
-        k.scheduler.signal(nil, k.scheduler.signals.pipe)
+        k.scheduler.kill(nil, k.scheduler.signals.pipe)
         return nil, "broken pipe"
       end
       self.rb = self.rb .. dat
@@ -2268,11 +2407,14 @@ do
 
   function os.setenv(K, v)
     local info = k.scheduler.info()
+    if not info then return end
     info.data.env[K] = v
   end
 
   function os.getenv(K)
     local info = k.scheduler.info()
+
+    if not info then return end
     
     if not K then
       return info.data.env
@@ -2307,6 +2449,7 @@ do
   local buffer = {}
  
   function buffer:read_byte()
+    if __internal_yield then __internal_yield(1) end
     if self.buffer_mode ~= "none" and self.buffer_mode ~= "pipe" then
       if (not self.read_buffer) or #self.read_buffer == 0 then
         self.read_buffer = self.base:read(self.buffer_size)
@@ -2327,7 +2470,7 @@ do
   end
 
   function buffer:write_byte(byte)
-    if self.buffer_mode ~= "none" then
+    if self.buffer_mode ~= "none" and self.buffer_mode ~= "pipe" then
       if #self.write_buffer >= self.buffer_size then
         self.base:write(self.write_buffer)
         self.write_buffer = ""
@@ -2449,7 +2592,7 @@ do
   end
 
   function buffer:write(...)
-    if self.closed then
+    if self.closed and self.buffer_mode ~= "pipe" then
       return nil, "bad file descriptor"
     end
     
@@ -2539,6 +2682,12 @@ do
     setmetatable(new, fmt)
     return new
   end
+
+  k.hooks.add("sandbox", function()
+    k.userspace.package.loaded.fstream = {
+      create = k.create_fstream
+    }
+  end)
 end
 --#include "base/stdlib/FILE.lua"
 -- io library --
@@ -2710,7 +2859,7 @@ do
       args[i] = tostring(args[i])
     end
     
-    return (io.stdout or k.logio):write(
+    return (io.stdout or io.output()):write(
       table.concat(args, "  ", 1, args.n), "\n")
   end
 end
@@ -2793,20 +2942,81 @@ do
   end
 
   -- let's define this here because WHY NOT
+  -- now with shebang support!
+  local shebang_pattern = "^#!(/.-)\n"
+  local ldf_loading = {}
+  local ldf_cache = {}
+  local ldf_mem_thresh = tonumber(k.cmdline["loadcache.gc_threshold"]) or 4096
+  local ldf_max_age = tonumber(k.cmdline["loadcache.max_age"]) or 60
+
+  k.event.register("*", function()
+    for k, v in pairs(ldf_cache) do
+      if ldf.time < computer.uptime() - ldf_max_age then
+        ldf_cache[k] = nil
+      end
+    end
+    if computer.freeMemory() <= ldf_mem_thresh then
+      ldf_cache = {}
+    end
+  end)
+
   function _G.loadfile(file, mode, env)
     checkArg(1, file, "string")
     checkArg(2, mode, "string", "nil")
     checkArg(3, env, "table", "nil")
+
+    if ldf_loading[file] then
+      return nil, "file is already loading, likely due to a shebang error"
+    end
+
+    file = k.fs.clean(file)
+
+    local fstat, err = k.fs.api.stat(file)
+    if not fstat then
+      return nil, err
+    end
+
+    if ldf_cache[file]and fstat.lastModified<=ldf_cache[file].lastModified then
+      ldf_cache[file].time = computer.uptime()
+      return ldf_cache[file].func
+    end
     
     local handle, err = io.open(file, "r")
     if not handle then
       return nil, err
     end
+
+    ldf_loading[file] = true
     
     local data = handle:read("a")
     handle:close()
 
-    return load(data, "="..file, "bt", env or k.userspace or _G)
+    local shebang = data:match(shebang_pattern) 
+    if shebang then
+      if not shebang:match("lua") then
+        if k.fsapi.stat(shebang .. ".lua") then shebang = shebang .. ".lua" end
+        local ok, err = loadfile(shebang)
+        ldf_loading[file] = false
+        if not ok and err then
+          return nil, "error loading interpreter: " .. err
+        end
+        return function(...) return ok(file, ...) end
+      else
+        data = data:gsub(shebang_pattern, "")
+      end
+    end
+
+    ldf_loading[file] = false
+
+    local ok, err = load(data, "="..file, "bt", env or k.userspace or _G)
+    if ok then
+      ldf_cache[file] = {
+        func = ok,
+        time = computer.uptime(),
+        lastModified = fstat.lastModified
+      }
+    end
+    return ok, err
   end
 
   function _G.dofile(file)
@@ -2836,7 +3046,7 @@ do
       return function(...)
         if not acl.user_has_permission(k.scheduler.info().owner,
             p) then
-          error("permission denied")
+          error("permission denied", 0)
         end
     
         return f(...)
@@ -3000,7 +3210,7 @@ do
     return true
   end
 
-  -- copied from machine.lua
+  -- copied from machine.lua, with modifications
   function _G.checkArg(n, have, ...)
     have = type(have)
     
@@ -3012,10 +3222,14 @@ do
       end
     end
     
+    if type(n) == "number" then n = string.format("#%d", n)
+    else n = "'"..tostring(n).."'" end
     if not check(...) then
-      local msg = string.format("bad argument #%d (%s expected, got %s)",
-                                n, table.concat(table.pack(...), " or "), have)
-      error(msg, 3)
+      local name = debug.getinfo(3, 'n').name
+      local msg = string.format("bad argument %s to '%s' (%s expected, got %s)",
+                                n, name, table.concat(table.pack(...), " or "),
+                                have)
+      error(msg, 2)
     end
   end
 end
@@ -3311,8 +3525,8 @@ if (not k.cmdline.no_force_yields) then
       local old_iyield = env.__internal_yield
       local old_cyield = env.coroutine.yield
       
-      env.__internal_yield = function()
-        if computer.uptime() - last_yield >= max_time then
+      env.__internal_yield = function(tto)
+        if computer.uptime() - last_yield >= (tto or max_time) then
           last_yield = computer.uptime()
           local msg = table.pack(old_cyield(0.05))
           if msg.n > 0 then ysq[#ysq+1] = msg end
@@ -3465,11 +3679,11 @@ do
   -- default signal handlers
   local defaultHandlers = {
     [0] = function() end,
-    [1] = function(self) self.status = "got SIGHUP" self.dead = true end,
-    [2] = function(self) self.status = "interrupted" self.dead = true end,
-    [3] = function(self) self.status = "got SIGQUIT" self.dead = true end,
-    [9] = function(self) self.status = "killed" self.dead = true end,
-    [13] = function(self) self.status = "broken pipe" self.dead = true end,
+    [1] = function(self) self.pstatus = "got SIGHUP" self.dead = true end,
+    [2] = function(self) self.pstatus = "interrupted" self.dead = true end,
+    [3] = function(self) self.pstatus = "got SIGQUIT" self.dead = true end,
+    [9] = function(self) self.pstatus = "killed" self.dead = true end,
+    [13] = function(self) self.pstatus = "broken pipe" self.dead = true end,
     [18] = function(self) self.stopped = true end,
   }
   
@@ -3505,7 +3719,7 @@ do
           end
           -- and don't block SIGKILL, unless we're init
           if self.pid ~= 1 and s == 9 then
-            self.status = "killed" self.dead = true return true end
+            self.pstatus = "killed" self.dead = true return true end
           if self.signal[s] then
             return self.signal[s](self)
           else
@@ -3643,7 +3857,7 @@ do
     checkArg(1, proc, "number", "nil")
     checkArg(2, signal, "number")
     
-    proc = proc or current.pid
+    proc = proc or (processes[current] or {}).pid
     
     if not processes[proc] then
       return nil, "no such process"
@@ -3668,7 +3882,8 @@ do
   end
 
   local function closeFile(file)
-    if file.close and not file.tty then pcall(file.close, file) end
+    if file.close and file.buffer_mode ~= "pipe" and not file.tty then
+      pcall(file.close, file) end
   end
 
   local function handleDeath(proc, exit, err, ok)
@@ -3679,7 +3894,7 @@ do
       exit = 127
     else
       exit = err or 0
-      err = "exited"
+      err = proc.pstatus or "exited"
     end
 
     err = err or "died"
@@ -3763,6 +3978,7 @@ do
         local aok, ok, err = proc:resume(table.unpack(psig))
 
         if proc.dead or ok == "__internal_process_exit" or not aok then
+          if ok == "__internal_process_exit" then proc.pstatus = "exited" end
           handleDeath(proc, exit, err, ok)
         else
           proc.cputime = proc.cputime + computer.uptime() - start_time
@@ -3811,8 +4027,15 @@ do
     k.userspace.package.loaded.process = p
     
     function p.spawn(args)
-      checkArg(1, args.name, "string")
-      checkArg(2, args.func, "function")
+      checkArg(1, args, "table")
+      checkArg("name", args.name, "string")
+      checkArg("func", args.func, "function")
+      checkArg("env", args.env, "table", "nil")
+      checkArg("stdin", args.stdin, "FILE*", "nil")
+      checkArg("stdout", args.stdout, "FILE*", "nil")
+      checkArg("stderr", args.stderr, "FILE*", "nil")
+      checkArg("input", args.input, "FILE*", "nil")
+      checkArg("output", args.output, "FILE*", "nil")
     
       local sanitized = {
         func = args.func,
@@ -3822,6 +4045,7 @@ do
         input = args.input,
         output = args.output,
         stderr = args.stderr,
+        env = args.env
       }
       
       local new = api.spawn(sanitized)
@@ -4432,7 +4656,7 @@ do
           return proxy.getLabel() or "unlabeled"
         end,
         function(_, s)
-          proxy.setLabel(s)
+          proxy.setLabel(s:match("^(.-)\n"))
         end
       ),
       spaceUsed = util.fnmkfile(
@@ -4586,6 +4810,20 @@ do
     return protocols[proto].request(proto, rest, ...)
   end
 
+  function k.net.listen(url, ...)
+    checkArg(1, url, "string")
+    local proto, rest = url:match(ppat)
+    if not proto then
+      return nil, "protocol unspecified"
+    elseif not protocols[proto] then
+      return nil, "bad protocol: " .. proto
+    elseif not protocols[proto].listen then
+      return nil, "protocol does not support listening"
+    end
+
+    return protocols[proto].listen(proto, rest, ...)
+  end
+
   local hostname = "localhost"
 
   function k.net.hostname()
@@ -4600,6 +4838,11 @@ do
       return nil, "insufficient permission"
     end
     hostname = hn
+    for k, v in pairs(protocols) do
+      if v.sethostname then
+        v.sethostname(hn)
+      end
+    end
     return true
   end
 
@@ -4716,6 +4959,395 @@ do
   protocols.http = proto
 end
   --#include "extra/net/internet.lua"
+-- minitel driver --
+-- code credit goes to Izaya - i've just adapted his OpenOS code --
+
+k.log(k.loglevels.info, "extra/net/minitel")
+
+do
+  local listeners = {}
+  local debug = k.cmdline["minitel.debug"] and k.cmdline["minitel.debug"] ~= 0
+  local port = tonumber(k.cmdline["minitel.port"]) or 4096
+  local retry = tonumber(k.cmdline["minitel.retries"]) or 10
+  local route = true
+  local sroutes = {}
+  local rcache = setmetatable({}, {__index = sroutes})
+  local rctime = 15
+
+  local hostname = computer.address():sub(1, 8)
+
+  local pqueue = {}
+  local pcache = {}
+  local pctime = 30
+
+  local function dprint(...)
+    if debug then
+      k.log(k.loglevels.debug, ...)
+    end
+  end
+
+  local modems = {}
+  for addr, ct in component.list("modem") do
+    modems[#modems+1] = component.proxy(addr)
+  end
+  for k, v in ipairs(modems) do
+    v.open(port)
+  end
+  for addr, ct in component.list("tunnel") do
+    modems[#modems+1] = component.proxy(addr)
+  end
+
+  local function genPacketID()
+    local npID = ""
+    for i=1, 16, 1 do
+      npID = npID .. string.char(math.random(32, 126))
+    end
+    return npID
+  end
+
+  -- i've done my best to make this readable...
+  local function sendPacket(packetID, packetType, dest, sender,
+      vPort, data, repeatingFrom)
+    if rcache[dest] then
+      dprint("Cached", rcache[dest][1], "send", rcache[dest][2],
+        cfg.port, packetID, packetType, dest, sender, vPort, data)
+
+      if component.type(rcache[dest][1]) == "modem" then
+        component.invoke(rcache[dest][1], "send", rcache[dest][2],
+          cfg.port, packetID, packetType, dest, sender, vPort, data)
+      elseif component.type(rcache[dest][1]) == "tunnel" then
+        component.invoke(rcache[dest][1], "send", packetID, packetType, dest,
+          sender, vPort, data)
+      end
+    else
+      dprint("Not cached", cfg.port, packetID, packetType, dest,
+        sender, vPort,data)
+      for k, v in pairs(modems) do
+        -- do not send message back to the wired or linked modem it came from
+        -- the check for tunnels is for short circuiting `v.isWireless()`, which does not exist for tunnels
+        if v.address ~= repeatingFrom or (v.type ~= "tunnel"
+            and v.isWireless()) then
+          if v.type == "modem" then
+            v.broadcast(cfg.port, packetID, packetType, dest,
+              sender, vPort, data)
+            v.send(packetID, packetType, dest, sender, vPort, data)
+          end
+        end
+      end
+    end
+  end
+
+  local function pruneCache()
+    for k,v in pairs(rcache) do
+      dprint(k,v[3],computer.uptime())
+      if v[3] < computer.uptime() then
+        rcache[k] = nil
+        dprint("pruned "..k.." from routing cache")
+      end
+    end
+    for k,v in pairs(pcache) do
+      if v < computer.uptime() then
+        pcache[k] = nil
+        dprint("pruned "..k.." from packet cache")
+      end
+    end
+  end
+
+  local function checkPCache(packetID)
+    dprint(packetID)
+    for k,v in pairs(pcache) do
+      dprint(k)
+      if k == packetID then return true end
+    end
+    return false
+  end
+
+  local function processPacket(_,localModem,from,pport,_,packetID,packetType,dest,sender,vPort,data)
+    pruneCache()
+    if pport == cfg.port or pport == 0 then -- for linked cards
+    dprint(cfg.port,vPort,packetType,dest)
+    if checkPCache(packetID) then return end
+      if dest == hostname then
+        if packetType == 1 then
+          sendPacket(genPacketID(),2,sender,hostname,vPort,packetID)
+        end
+        if packetType == 2 then
+          dprint("Dropping "..data.." from queue")
+          pqueue[data] = nil
+          computer.pushSignal("net_ack",data)
+        end
+        if packetType ~= 2 then
+          computer.pushSignal("net_msg",sender,vPort,data)
+        end
+      elseif dest:sub(1,1) == "~" then -- broadcasts start with ~
+        computer.pushSignal("net_broadcast",sender,vPort,data)
+      elseif cfg.route then -- repeat packets if route is enabled
+        sendPacket(packetID,packetType,dest,sender,vPort,data,localModem)
+      end
+      if not rcache[sender] then -- add the sender to the rcache
+        dprint("rcache: "..sender..":", localModem,from,computer.uptime())
+        rcache[sender] = {localModem,from,computer.uptime()+cfg.rctime}
+      end
+      if not pcache[packetID] then -- add the packet ID to the pcache
+        pcache[packetID] = computer.uptime()+cfg.pctime
+      end
+    end
+  end
+
+  local function queuePacket(_,ptype,to,vPort,data,npID)
+    npID = npID or genPacketID()
+    if to == hostname or to == "localhost" then
+      computer.pushSignal("net_msg",to,vPort,data)
+      computer.pushSignal("net_ack",npID)
+      return
+    end
+    pqueue[npID] = {ptype,to,vPort,data,0,0}
+    dprint(npID,table.unpack(pqueue[npID]))
+  end
+
+  local function packetPusher()
+    for k,v in pairs(pqueue) do
+      if v[5] < computer.uptime() then
+        dprint(k,v[1],v[2],hostname,v[3],v[4])
+        sendPacket(k,v[1],v[2],hostname,v[3],v[4])
+        if v[1] ~= 1 or v[6] == cfg.retrycount then
+          pqueue[k] = nil
+        else
+          pqueue[k][5]=computer.uptime()+cfg.retry
+          pqueue[k][6]=pqueue[k][6]+1
+        end
+      end
+    end
+  end
+
+  k.event.register("modem_message", function(...)
+    packetPusher()pruneCache()processPacket(...)end)
+  
+  k.event.register("*", function(...)
+    packetPusher()
+    pruneCache()
+  end)
+
+  -- now, the minitel API --
+  
+  local mtapi = {}
+  local streamdelay = tonumber(k.cmdline["minitel.streamdelay"]) or 30
+  local mto = tonumber(k.cmdline["minitel.mtu"]) or 4096
+  local openports = {}
+
+  -- layer 3: packets
+
+  function mtapi.usend(to, port, data, npid)
+    queuePacket(nil, 0, to, port, data, npid)
+  end
+
+  function mtapi.rsend(to, port, data, noblock)
+     local pid, stime = genPacketID(), computer.uptime() + streamdelay
+     queuePacket(nil, 1, to, port, data, pid)
+     if noblock then return pid end
+     local sig, rpid
+     repeat
+       sig, rpid = coroutine.yield(0.5)
+     until (sig == "net_ack" and rpid == pid) or computer.uptime() > stime
+     if not rpid then return false end
+     return true
+  end
+
+  -- layer 4: ordered packets
+
+  function mtapi.send(to, port, ldata)
+    local tdata = {}
+    if #ldata > mtu then
+      for i=1, #ldata, mtu do
+        tdata[#tdata+1] = ldata:sub(1, mtu)
+        ldata = ldata:sub(mtu + 1)
+      end
+    else
+      tdata = {ldata}
+    end
+    for k, v in ipairs(tdata) do
+      if not mtapi.rsend(to, port, v) then
+        return false
+      end
+    end
+    return true
+  end
+
+  -- layer 5: sockets
+
+  local _sock = {}
+
+  function _sock:write(self, data)
+    if self.state == "open" then
+      if not mtapi.send(self.addr, self.port, data) then
+        self:close()
+        return nil, "timed out"
+      end
+    else
+      return nil, "socket is closed"
+    end
+  end
+
+  function _sock:read(self, length)
+    length = length or "\n"
+    local rdata = ""
+    if type(length) == "number" then
+      rdata = self.rbuffer:sub(1, length)
+      self.rbuffer = self.rbuffer:sub(length + 1)
+      return rdata
+    elseif type(length) == "string" then
+      if length:sub(1,1) == "a" or length:sub(1,2) == "*a" then
+        rdata = self.rbuffer
+        self.rbuffer = ""
+        return rdata
+      elseif #length == 1 then
+        local pre, post = self.rbuffer:match("(.-)"..length.."(.*)")
+        if pre and post then
+          self.rbuffer = post
+          return pre
+        end
+        return nil
+      end
+    end
+  end
+
+  local function socket(addr, port, sclose)
+    local conn = setmetatable({
+      addr = addr,
+      port = tonumber(port),
+      rbuffer = "",
+      state = "open",
+      sclose = sclose
+    }, {__index = _sock})
+
+    local function listener(_, f, p, d)
+      if f == conn.addr and p == conn.port then
+        if d == sclose then
+          conn:close()
+        else
+          conn.rbuffer = conn.rbuffer .. d
+        end
+      end
+    end
+
+    local id = k.event.register("net_msg", listener)
+    function conn:close()
+      k.event.unregister(id)
+      self.state = "closed"
+      mtapi.rsend(addr, port, sclose)
+    end
+
+    return conn
+  end
+  
+  k.hooks.add("sandbox", function()
+    k.userspace.package.loaded["network.minitel"] = k.util.copy_table(mtapi)
+  end)
+
+  local proto = {}
+  
+  function proto.sethostname(hn)
+    hostname = hn
+  end
+  
+  -- extension: 'file' argument passed to 'openstream'
+  local function open_socket(to, port, file)
+    if not mtapi.rsend(to, port, "openstream", file) then
+      return nil, "no ack from host"
+    end
+    local st = computer.uptime() + streamdelay
+    local est = false
+    local _, from, rport, data
+    while true do
+      repeat
+        _, from, rport, data = coroutine.yield(streamdelay)
+      until _ == "net_msg" or computer.uptime() > st
+      
+      if to == from and rport == port then
+        if tonumber(data) then
+          est = true
+        end
+        break
+      end
+
+      if st < computer.uptime() then
+        return nil, "timed out"
+      end
+    end
+
+    if not est then
+      return nil, "refused"
+    end
+
+    data = tonumber(data)
+    sclose = ""
+    local _, from, nport, sclose
+    repeat
+      _, from, nport, sclose = coroutine.yield()
+    until _ == "net_msg" and from == to and nport == data
+    return socket(to, data, sclose)
+  end
+
+
+  function proto:listen(url, handler, unregisterOnSuccess)
+    local hn, port = url:match("(.-):(%d+)")
+    if hn ~= "localhost" or not (hn and port) then
+      return nil, "bad URL: expected 'localhost:port'"
+    end
+
+    if handler then
+      local id = 0
+
+      local function listener(_, from, rport, data, data2)
+        if rport == port and data == "openstream" then
+          local nport = math.random(32768, 65535)
+          local sclose = genPacketID()
+          mtapi.rsend(from, rport, tostring(nport))
+          mtapi.rsend(from, nport, sclose)
+          if unregisterOnSuccess then k.event.unregister(id) end
+          handler(socket(from, nport, sclose), data2)
+        end
+      end
+
+      id = k.event.register("net_msg", listener)
+      return true
+    else
+      local _, from, rport, data
+      repeat
+        _, from, rport, data = coroutine.yield()
+      until _ == "net_msg"
+      local nport = math.random(32768, 65535)
+      local sclose = genPacketID()
+      mtapi.rsend(from, rport, tostring(nport))
+      mtapi.rsend(from, nport, sclose)
+      return socket(from, nport, sclose)
+    end
+  end
+
+  -- url format:
+  -- hostname:port
+  function proto:socket(url)
+    local to, port = url:match("^(.-):(%d+)")
+    if not (to and port) then
+      return nil, "bad URL: expected 'hostname:port', got " .. url
+    end
+    return open_socket(to, tonumber(port))
+  end
+
+  -- hostname:port/path/to/file
+  function proto:request(url)
+    local to, port, file = url:match("^(.-):(%d+)/(.+)")
+    if not (to and port and file) then
+      return nil, "bad URL: expected 'hostname:port/file'"
+    end
+    return open_socket(to, tonumber(port), file)
+  end
+
+  protocols.mt = proto
+  protocols.mtel = proto
+  protocols.minitel = proto
+end
+  --#include "extra/net/minitel.lua"
 end
 --#include "extra/net/base.lua"
 -- getgpu - get the gpu associated with a tty --
@@ -4766,84 +5398,6 @@ do
   end)
 end
 --#include "extra/ustty.lua"
--- sound api v2:  emulate the sound card for everything --
-
-k.log(k.loglevels.info, "extra/sound")
-
-do
-  local api = {}
-  local tiers = {
-    internal = 0,
-    beep = 1,
-    noise = 2,
-    sound = 3,
-    [0] = "internal",
-    "beep",
-    "noise",
-    "sound"
-  }
-
-  local available = {
-    internal = 1,
-    beep = 0,
-    noise = 0,
-    sound = 0,
-  }
-
-  local proxies = {
-    internal = {
-      [computer.address()] = {
-        beep = function(tab)
-          return computer.beep(tab[1][1], tab[1][2])
-        end
-      }
-    },
-    beep = {},
-    noise = {},
-    sound = {}
-  }
-  
-  local current = "internal"
-  local caddr = computer.address()
-
-  local function component_changed(sig, addr, ctype)
-    if sig == "component_added" then
-      if tiers[ctype] and tiers[ctype] > tiers[current] then
-        current = ctype
-        available[ctype] = math.max(1, available[ctype] + 1)
-        proxies[ctype][addr] = component.proxy(addr)
-      end
-    else
-      if tiers[ctype] then
-        available[ctype] = math.min(0, available[ctype] - 1)
-        proxies[ctype][addr] = nil
-        if caddr == addr then
-          for i=#tiers, 0, -1 do
-            if available[tiers[i]] > 0 then
-              current = tiers[i]
-              caddr = next(proxies[current])
-            end
-          end
-        end
-      end
-    end
-  end
-
-  k.event.register("component_added", component_changed)
-  k.event.register("component_removed", component_changed)
-
-  local handlers = {
-    internal = {play = select(2, next(proxies.internal)).beep},
-    --#include "extra/sound/beep.lua"
-    --#include "extra/sound/noise.lua"
-    --#include "extra/sound/sound.lua"
-  }
-
-  function api.play(notes)
-    return handlers[current].play(notes)
-  end
-end
---#include "extra/sound.lua"
 --#include "includes.lua"
 -- load /etc/passwd, if it exists
 

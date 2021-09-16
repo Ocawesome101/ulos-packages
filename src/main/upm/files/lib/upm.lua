@@ -5,6 +5,7 @@ local path = require("path")
 local mtar = require("mtar")
 local size = require("size")
 local config = require("config")
+local semver = require("semver")
 local network = require("network")
 local computer = require("computer")
 local filetypes = require("filetypes")
@@ -25,6 +26,14 @@ end
 local function exit(opts, reason)
   log(opts, pfx.err, reason)
   os.exit(1)
+end
+
+local function cmpver(a, b)
+  local v1 = semver.parse(a)
+  local v2 = semver.parse(b)
+  v1.build = nil
+  v2.build = nil
+  return semver.isGreater(v1, v2) or semver.build(v1) == semver.build(v2)
 end
 
 local installed, ipath, preloaded
@@ -235,7 +244,7 @@ local function install(cfg, opts, packages)
   local resolve, resolving = nil, {}
   resolve = function(pkg)
     local data, repo = search(cfg, opts, pkg)
-    if installed[pkg] and installed[pkg].info.version >= data.version
+    if installed[pkg] and cmpver(installed[pkg].info.version, data.version)
         and not opts.f then
       log(opts, pfx.err, pkg .. ": package is already installed")
     elseif resolving[pkg] then
@@ -357,7 +366,7 @@ function lib.upgrade(cfg, opts)
   local to_upgrade = {}
   for k, v in pairs(installed) do
     local data, repo = search(cfg, opts, k)
-    if not (installed[k] and installed[k].info.version >= data.version
+    if not (installed[k] and cmpver(installed[k].info.version, data.version)
         and not opts.f) then
       log(opts, pfx.info, "updating ", k)
       to_upgrade[#to_upgrade+1] = k
@@ -370,7 +379,8 @@ function lib.cli_search(cfg, opts, args)
   lib.preload()
   for i=1, #args, 1 do
     for data, repo, name in search(cfg, opts, args[i], true) do
-      io.write("\27[94m", repo, "\27[39m/", name, " ",
+      io.write("\27[94m", repo, "\27[39m/", name, "\27[90m-",
+        data.version, "\27[37m ",
         installed[name] and "\27[96m(installed)\27[39m" or "", "\n")
       io.write("  \27[92mAuthor: \27[39m", data.author or "(unknown)", "\n")
       io.write("  \27[92mDesc: \27[39m", data.description or
@@ -390,10 +400,11 @@ function lib.cli_list(cfg, opts, args)
       local data, err = config.table:load(path.concat(opts.root,
         cfg.General.dataDirectory, k .. ".list"))
       if not data then
-        log(pfx.warn, "list ", k, " is nonexistent; run 'upm update' to refresh")
+        log(pfx.warn,"list ", k, " is nonexistent; run 'upm update' to refresh")
         if err then log(pfx.warn, "(err: ", err, ")") end
       else
         for p in pairs(data.packages) do
+          --io.stderr:write(p, "\n")
           print(p)
         end
       end
@@ -417,6 +428,7 @@ end
 lib.search=search
 lib.update=update
 lib.download=download
+lib.download_package = dl_pkg
 lib.extract=extract
 lib.install_package=install_package
 lib.install=install

@@ -52,7 +52,7 @@ local function sscroll(up)
   else
     io.write("\27[S")
     scroll.h = scroll.h + 1
-    cache[scroll.h + h + 1] = false
+    cache[scroll.h + h - 1] = false
   end
 end
 
