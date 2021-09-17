@@ -12,7 +12,7 @@ local usd = {}
 
 usd._VERSION_MAJOR = 1
 usd._VERSION_MINOR = 0
-usd._VERSION_PATCH = 4
+usd._VERSION_PATCH = 6
 usd._RUNNING_ON = "unknown"
 
 io.write(string.format("USysD version %d.%d.%d\n", usd._VERSION_MAJOR, usd._VERSION_MINOR,
@@ -75,12 +75,42 @@ do
 
   local api = {}
   local running = {}
+  local requests = {}
   usd.running = running
+  usd.requests = requests
 
   local starting = {}
   local ttys = {[0] = io.stderr}
+
+  local function request(name, op)
+    local n = #requests+1
+    requests[n] = {name = name, op = op}
+    repeat until requests[n].performed
+    requests[n].clear = true
+    return table.unpack(requests[n], 1, requests[n].n)
+  end
+
   function api.start(name)
     checkArg(1, name, "string")
+    return request(name, "internal_start")
+  end
+
+  function api.stop(name)
+    checkArg(1, name, "string")
+    return request(name, "internal_stop")
+  end
+  
+  function api.enable(name)
+    checkArg(1, name, "string")
+    return request(name, "internal_enable")
+  end
+
+  function api.disable(name)
+    checkArg(1, name, "string")
+    return request(name, "internal_disable")
+  end
+
+  function usd.internal_start(name)
     if running[name] or starting[name] then return true end
 
     local full_name = name
@@ -148,6 +178,7 @@ do
       return nil
     end
 
+    starting[full_name] = false
     local pid, err = users.exec_as(uid, "", ok, "["..name.."]", nil, ttys[tty])
     if not pid and err then
       usd.log("\27[A\27[G\27[2K", usd.statii.fail, "failed to start ", full_name, ": ", err)
@@ -160,14 +191,17 @@ do
     return true
   end
 
-  function api.stop(name)
-    checkArg(1, name, "string")
+  function usd.internal_stop()
     usd.log(usd.statii.ok, "stopping service ", name)
     if not running[name] then
       usd.log(usd.statii.warn, "service ", name, " is not running")
       return nil
     end
-    process.kill(running[name], process.signals.quit)
+    local ok, err = process.kill(running[name], process.signals.quit)
+    if not ok then
+      usd.log(usd.statii.fail, "service ", name, " failed to stop: ", err, "\n")
+      return nil
+    end
     running[name] = nil
     return true
   end
@@ -192,8 +226,7 @@ do
     return fs.list(svc_dir)
   end
 
-  function api.enable(name)
-    checkArg(1, name, "string")
+  function usd.internal_enable(name)
     local enabled = api.list(true)
     local handle, err = io.open(autostart, "w")
     if not handle then return nil, err end
@@ -203,8 +236,7 @@ do
     return true
   end
 
-  function api.disable(name)
-    checkArg(1, name, "string")
+  function usd.internal_disable(name)
     local enabled = api.list(true)
     local handle, err = io.open(autostart, "w")
     if not handle then return nil, err end
@@ -220,10 +252,10 @@ do
   end
 
   usd.api = api
-  package.loaded.usysd = api
+  package.loaded.usysd = package.protect(api)
 
   for line in io.lines(autostart, "l") do
-    api.start(line)
+    usd.internal_start(line)
   end
 end
 --#include "src/serviceapi.lua"
@@ -269,6 +301,13 @@ while true do
   for name, pid in pairs(usd.running) do
     if not proc.info(pid) then
       usd.running[name] = nil
+    end
+  end
+  for i, req in pairs(usd.requests) do
+    if req.clear then
+      usd.requests[i] = nil
+    else
+      usd.requests[i] = table.pack(usysd[req.op](req.name))
     end
   end
   if usd.__should_shut_down then

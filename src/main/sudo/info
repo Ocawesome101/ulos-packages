@@ -1,0 +1,3 @@
+author="Ocawesome101"
+description="The ULOS sudo utility"
+dependencies={"usysd"}

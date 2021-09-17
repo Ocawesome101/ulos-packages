@@ -1,0 +1,3 @@
+author="Ocawesome101"
+description="Start login prompts on TTYs which don't already have services running on them"
+dependencies={"usysd","coreutils"}

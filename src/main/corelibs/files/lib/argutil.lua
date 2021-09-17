@@ -99,6 +99,9 @@ function lib.getopt(_opts, ...)
         end
       end
     else
+      if _opts.finish_after_arg then
+        done = true
+      end
       args[#args+1] = arg
     end
   end

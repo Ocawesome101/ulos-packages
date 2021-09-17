@@ -1,0 +1,53 @@
+*{NAME}
+  vt100 - Cynosure TTY's supported VT100 subset
+
+*{DESCRIPTION}
+  This manual page documents the Cynosure TTY's VT100 emulation featureset.  For general information on VT100 and the ISO 6429 standard, see *{ansi}(*{7})
+
+  All escape sequences begin with an ascii magenta{0x1B}, referred to hereafter as *{ESC}.  Standard escape sequences (i.e. those supported by most other terminal emulators) are preceded with an *{ESC}[.  Terminal-specific sequences (those only supported by the Cynosure TTY) are preceded by *{ESC}?.
+
+  Because all escape sequences require an escape character before them to have any effect, the escape character has been omitted from the below descriptions.  Unless otherwise noted, all numeric parameters are optional.
+
+    *{[}magenta{N}*{A}
+      Moves the cursor up magenta{N} rows.  Scrolls as necessary.
+
+    *{[}magenta{N}*{B}
+      Moves the cursor down magenta{N} rows.  Scrolls as necessary.
+
+    *{[}magenta{N}*{C}
+      Moves the cursor to the right magenta{N} columns.  If the cursor moves off the screen it will automatically be moved to the beginning of the next line.
+
+    *{[}magenta{N}*{D}
+      Moves the cursor to the left magenta{N} columns.  If the cursor moves off the screen, it will automatically wrap to the end of the previous line.
+
+    *{[}magenta{O}*{;}magenta{P1}*{;}magenta{...}*{g}
+      yellow{Incompatible with other terminals.}
+
+      Performs certain GPU-accelerated functions, such as copying a region of the screen.  Only supports those functions which take only numeric parameters (e.g. blue{copy}() and blue{fill}(), but no blue{set}()).  The operation to perform is selected by the first parameter magenta{O}.  Currently supported operations are:
+        blue{fill}(), which functions as a "clear" and takes four parameters in the same order as the first four parameters of the blue{gpu.fill}() function;
+
+        blue{copy}(), which takes six parameters and performs a blue{gpu.copy}() operation with them.
+
+    *{[}magenta{N}*{G}
+      Moves the cursor to the beginning of the line, offset by magenta{N} characters.
+
+    *{[}magenta{Y};magenta{X}*{H}
+      Sets the cursor position to (magenta{X}, magenta{Y}).
+
+    *{[}magenta{N}*{J}
+    *{[}magenta{N}*{K}
+    *{[}magenta{N}*{;}magenta{...}*{m}
+    *{[}magenta{N}*{n}
+    *{[}magenta{N}*{S}
+    *{[}magenta{N}*{T}
+    *{?}magenta{N}*{c}
+    *{?}magenta{N}*{s}
+
+*{COPYRIGHT}
+  Cynosure kernel copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Please report bugs at @{https://github.com/ocawesome101/oc-cynosure/issues}.
+
+*{SEE ALSO}
+  *{ansi}(*{7})

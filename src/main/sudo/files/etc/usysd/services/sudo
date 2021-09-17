@@ -1,0 +1,3 @@
+[usysd-service]
+file = /usr/lib/sudo/sudo.lua
+user = root

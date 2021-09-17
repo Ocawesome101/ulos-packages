@@ -1,0 +1,11 @@
+*{NAME}
+  ansi - a bit of history of the ANSI X3.64 and ISO 6429 standards
+
+*{DESCRIPTION}
+  The ISO 6429 standard began in 1976 when ANSI released the ECMA-48 standard for terminal control sequences.  The DEC VT100, released in 1978, was the first mainstream video terminal to support them[*{1}].  
+
+*{SOURCES}
+  1. @{https://wikipedia.org/wiki/ansi_escape_code}
+
+*{COPYRIGHT}
+  Text copyright (c) 2021 Ocawesome101 under the DSLv2.

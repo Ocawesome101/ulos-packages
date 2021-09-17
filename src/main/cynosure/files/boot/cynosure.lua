@@ -37,7 +37,7 @@ end
 do
   k._NAME = "Cynosure"
   k._RELEASE = "1.8"
-  k._VERSION = "2021.09.16-default"
+  k._VERSION = "2021.09.17-default"
   _G._OSVERSION = string.format("%s r%s-%s", k._NAME, k._RELEASE, k._VERSION)
 end
 --#include "base/version.lua"
@@ -1876,7 +1876,7 @@ do
 
   -- "clean" a path
   local function clean(path)
-    return table.concat(split(path), "/")
+    return "/" .. table.concat(split(path), "/")
   end
 
   fs.clean = clean

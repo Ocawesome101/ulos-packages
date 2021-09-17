@@ -9,13 +9,35 @@ local readline = require("readline")
 
 local args, opts = require("argutil").parse(...)
 
-local _VERSION_FULL = "1.0.0"
+local _VERSION_FULL = "1.0.1"
 local _VERSION_MAJOR = _VERSION_FULL:sub(1, -3)
+
+if opts.h or opts.help then
+  io.stderr:write([[
+usage: bsh [options] [...]
+The Better Shell.
+  -l,--login  This is a login shell.
+]])
+  os.exit(0)
+elseif opts.v or opts.version then
+  io.write("BSH v",_VERSION_FULL, "\n")
+  os.exit(0)
+end
 
 os.setenv("PATH", os.getenv("PATH") or "/bin:/sbin:/usr/bin")
 os.setenv("PS1", os.getenv("PS1") or "<\\u@\\h: \\W> ")
 os.setenv("SHLVL", tostring(math.floor(((os.getenv("SHLVL") or "0") + 1))))
 os.setenv("BSH_VERSION", _VERSION_FULL)
+
+if opts.l or opts.login then
+  if not os.getenv("HOME") then
+    io.stderr:write("bsh: warning: HOME not set\n")
+  elseif not fs.stat(os.getenv("HOME")) then
+    io.stderr:write("bsh: warning: home directory dos not exist\n")
+  else
+    os.setenv("PWD", os.getenv("HOME"))
+  end
+end
 
 local logError = function(err)
   if not err then return end
@@ -181,7 +203,9 @@ end
 
 local function resolveCommand(name)
   if builtins[name] then return builtins[name] end
-  local try = {name}
+  local try = {}
+  if name:sub(1, 2) == "./" or name:sub(1,1) == "/" then
+    try[#try + 1] = name end
   for ent in os.getenv("PATH"):gmatch("[^:]+") do
     try[#try+1] = path.concat(ent, name)
   end
@@ -204,10 +228,17 @@ local function executeCommand(cstr, nowait)
     if name then cstr.env[name] = assign end
   end
   
-  if #cstr.command == 0 then for k,v in pairs(cstr.env) do os.setenv(k, v) end return 0, "exited" end
+  if #cstr.command == 0 then
+    for k,v in pairs(cstr.env) do os.setenv(k, v) end
+    return 0, "exited"
+  end
   
   local file, err = resolveCommand(cstr.command[1])
-  if not file then logError("sh: " .. cstr.command[1] .. ": " .. err) return nil, err end
+  if not file then
+    logError("sh: " .. cstr.command[1] .. ": " .. err)
+    return nil, err
+  end
+
   local ok
 
   if type(file) == "function" then -- this means it's a builtin
