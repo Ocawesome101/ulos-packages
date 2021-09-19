@@ -85,7 +85,7 @@ do
   local function request(name, op)
     local n = #requests+1
     requests[n] = {name = name, op = op}
-    repeat until requests[n].performed
+    repeat coroutine.yield(0) until requests[n].performed
     requests[n].clear = true
     return table.unpack(requests[n], 1, requests[n].n)
   end
@@ -304,6 +304,7 @@ while true do
     end
   end
   for i, req in pairs(usd.requests) do
+    print(i, req.op, req.name)
     if req.clear then
       usd.requests[i] = nil
     else

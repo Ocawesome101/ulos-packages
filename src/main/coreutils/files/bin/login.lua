@@ -48,8 +48,9 @@ local function main()
 
         os.setenv("HOSTNAME", gethostname())
 
-        local exit, err = users.exec_as(uid, pw, function()return shellf("--login")end, shell,
-          true)
+        local exit, err = users.exec_as(uid, pw, function()
+            return shellf("--login")
+          end, shell, true)
         io.write("\27[2J\27[1;1H")
         if exit ~= 0 then
           print(exit, err)

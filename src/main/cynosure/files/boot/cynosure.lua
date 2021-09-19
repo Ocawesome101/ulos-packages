@@ -36,8 +36,8 @@ end
 
 do
   k._NAME = "Cynosure"
-  k._RELEASE = "1.8"
-  k._VERSION = "2021.09.17-default"
+  k._RELEASE = "1.9.2"
+  k._VERSION = "2021.09.19-default"
   _G._OSVERSION = string.format("%s r%s-%s", k._NAME, k._RELEASE, k._VERSION)
 end
 --#include "base/version.lua"
@@ -423,7 +423,7 @@ do
   function commands:S(args)
     local n = args[1] or 1
     self.gpu.copy(1, n, self.w, self.h, 0, -n)
-    self.gpu.fill(1, self.h - o, self.w, n, " ")
+    self.gpu.fill(1, self.h - n, self.w, n, " ")
   end
 
   function commands:T(args)
@@ -1876,10 +1876,10 @@ do
 
   -- "clean" a path
   local function clean(path)
-    return "/" .. table.concat(split(path), "/")
+    return table.concat(split(path), "/")
   end
 
-  fs.clean = clean
+  fs.clean = function(p) return "/" .. clean(p) end
 
   local faux = {children = mounts}
   local resolving = {}
@@ -2976,7 +2976,7 @@ do
       return nil, err
     end
 
-    if ldf_cache[file]and fstat.lastModified<=ldf_cache[file].lastModified then
+    if ldf_cache[file] and fstat.lastModified<=ldf_cache[file].lastModified then
       ldf_cache[file].time = computer.uptime()
       return ldf_cache[file].func
     end

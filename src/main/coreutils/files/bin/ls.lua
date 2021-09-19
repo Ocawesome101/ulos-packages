@@ -121,7 +121,8 @@ local function colorize(f, p)
     local info, err = fs.stat(full)
     
     if not info then
-      io.stderr:write("ls: failed getting color information for ", f, ": ", err, "\n")
+      io.stderr:write("ls: failed getting color information for ", f, ": ",
+        err, "\n")
       return nil
     end
     
@@ -158,6 +159,8 @@ local function list(dir)
   if not files then
     return nil, string.format("cannot access '%s': %s", odir, err)
   end
+
+  if #files == 0 then return true end
   
   local rm = {}
   for i=1, #files, 1 do

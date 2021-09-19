@@ -95,6 +95,12 @@
     *{false}
       Exits with a status of 1.
 
+    *{time}
+      Executes the provided command and prints the amount of time it took to execute.
+
+    *{source FILE}
+      Evaluate the provided *{FILE} line-by-line with the current shell environment.
+
 *{COPYRIGHT}
   Better Shell copyright (c) 2021 Ocawesome101 under the DSLv2.
 

@@ -7,16 +7,30 @@ local fs = require("filesystem")
 local process = require("process")
 local readline = require("readline")
 
-local args, opts = require("argutil").parse(...)
+local args, opts = require("argutil").getopt({
+  allow_finish = true,
+  --finish_after_arg = true,
+  exit_on_bad_opt = true,
+  options = {
+    h = false, help = false,
+    v = false, version = false,
+    l = false, login = false,
+    c = true
+  }
+}, ...)
 
-local _VERSION_FULL = "1.0.1"
+local _VERSION_FULL = "1.1.0"
 local _VERSION_MAJOR = _VERSION_FULL:sub(1, -3)
 
 if opts.h or opts.help then
   io.stderr:write([[
 usage: bsh [options] [...]
 The Better Shell.
-  -l,--login  This is a login shell.
+  -l,--login    Specify this shell as a login
+                shell
+  -h,--help     Print this help message
+  -v,--version  Print the BSH version
+  -c COMMAND    Execute COMMAND and exit.
 ]])
   os.exit(0)
 elseif opts.v or opts.version then
@@ -192,8 +206,8 @@ builtins = {
     local start = require("computer").uptime()
     os.execute(cmd)
     local time = require("computer").uptime() - start
-    print("real  " .. tostring(time) .. "s")
-  end
+    print(string.format("real  %.4fs", time))
+  end,
 }
 
 local function exists(file)
@@ -205,9 +219,11 @@ local function resolveCommand(name)
   if builtins[name] then return builtins[name] end
   local try = {}
   if name:sub(1, 2) == "./" or name:sub(1,1) == "/" then
-    try[#try + 1] = name end
-  for ent in os.getenv("PATH"):gmatch("[^:]+") do
-    try[#try+1] = path.concat(ent, name)
+    try[#try + 1] = name
+  else
+    for ent in os.getenv("PATH"):gmatch("[^:]+") do
+      try[#try+1] = path.concat(ent, name)
+    end
   end
   for i, check in ipairs(try) do
     local file = exists(check)
@@ -216,6 +232,21 @@ local function resolveCommand(name)
     end
   end
   return nil, "command not found"
+end
+
+function builtins.which(...)
+  local args = table.pack(...)
+  local exs = 0
+  for i=1, #args, 1 do
+    local ok, err = resolveCommand(args[i])
+    if not ok then
+      exs = 1
+      logError("which: " .. err)
+    else
+      print(ok)
+    end
+  end
+  return exs
 end
 
 local jobs = {}
@@ -564,6 +595,21 @@ eval_2 = function(simplified, captureOutput, captureInput)
   end
 end
 
+builtins.source = function(file)
+  local handle = io.open(file, "r")
+  if not handle then
+    logError("sh: source: ", file, ": ", err, "\n")
+    return 1
+  end
+  local ex = 0
+  for line in handle:lines() do
+    local ok, err = eval_2(eval_1(mkrdr(tokenize(line))))
+    if not ok and err then ex = 1 logError("sh: " .. err) end
+  end
+  handle:close()
+  return ex
+end
+
 local function process_prompt(ps)
   return (ps:gsub("\\(.)", {
     ["$"] = os.getenv("USER") == "root" and "#" or "$",
@@ -617,18 +663,24 @@ function io.popen(command, mode)
   return handle
 end
 
-if fs.stat("/etc/bshrc") then
-  for line in io.lines("/etc/bshrc") do
-    local ok, err = eval_2(eval_1(mkrdr(tokenize(line))))
-    if not ok and err then logError("sh: " .. err) end
+if fs.stat("/etc/profile") then
+  builtins.source("/etc/profile")
+end
+
+if opts.c then
+  local ok, err = os.execute(opts.c)
+  if not ok then
+    os.exit(1)
   end
+  os.exit(0)
+end
+
+if fs.stat("/etc/bshrc") then
+  builtins.source("/etc/bshrc")
 end
 
 if fs.stat(os.getenv("HOME") .. "/.bshrc") then
-  for line in io.lines(os.getenv("HOME") .. "/.bshrc") do
-    local ok, err = eval_2(eval_1(mkrdr(tokenize(line))))
-    if not ok and err then logError("sh: " .. err) end
-  end
+  builtins.source(os.getenv("HOME") .. "/.bshrc")
 end
 
 local hist = {}
