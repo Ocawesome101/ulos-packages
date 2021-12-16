@@ -4,7 +4,7 @@ repo="atirut-w/ulos-programs/main"
 baseurl="https://raw.githubusercontent.com/$repo"
 outpath="files/"
 
-mkdir -p files
+mkdir -p files/usr/{bin,man}
 
 download() {
   printf "downloading $baseurl/$1..."
