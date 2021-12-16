@@ -1,0 +1,16 @@
+#!/bin/bash
+
+repo="atirut-w/ulos-programs/main"
+baseurl="https://raw.githubusercontent.com/$repo"
+outpath="files/"
+
+mkdir -p files/usr/{bin,man}
+
+download() {
+  printf "downloading $baseurl/$1..."
+  wget -q "$baseurl/$1" -O $outpath/$2
+  printf "done\n"
+}
+
+download "flash/flash.lua" "usr/bin/flash.lua"
+download "flash/manpage" "usr/man/1/flash"
