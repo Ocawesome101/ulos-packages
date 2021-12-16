@@ -1,0 +1,18 @@
+*{NAME}
+  glob - shell-style glob expansion
+
+*{USAGE}
+  yellow{local} glob = blue{require}(red{"glob"})
+
+  yellow{local} files = blue{glob}(red{"/example/p*th/*/*to/file*"})
+
+*{DESCRIPTION}
+  $[glob} provides a fairly complete shell-style glob expansion utility.  It is used in *{bsh}(*{1}) as the means of glob expansion.
+
+  If ${glob}() does not find any matches for the provided path, it will return the original path as the only result.  It will never return an error.  It will always return a table.
+
+*{COPYRIGHT}
+  Glob expander copyright (c) 2021 Ocawesome101 under the DSLv2.
+
+*{REPORTING BUGS}
+  Please report bugs at @{https://github.com/ocawesome101/oc-ulos/issues}.

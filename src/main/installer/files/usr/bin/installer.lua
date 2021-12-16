@@ -173,10 +173,16 @@ local function wdofile(ios, file, ...)
   end
 end
 
+local online = false
 local function postinstall(wrapped)
   os.execute("mkdir -p /mnt/root")
   wdofile(wrapped, "/usr/bin/mkpasswd.lua", "-i", "/mnt/etc/passwd")
   wdofile(wrapped, "/usr/bin/hnsetup.lua")
+
+  if online then
+    wrapped:write("Installing bootloader\n")
+    wdofile(wrapped, "/bin/upm.lua", "--root=/mnt", "-y", "install", "cldr")
+  end
 
   io.write("\27?5c")
   io.flush()
@@ -191,7 +197,6 @@ local function install_online(wrapped)
     "coreutils",
     "corelibs",
     "upm",
-    "cldr",
   }
   local ok = wdofile(wrapped, "/bin/upm.lua", "update", "--root=/mnt")
   if ok then
@@ -261,6 +266,7 @@ while true do
         if sel == 2 then
           local wrap = preinstall()
           if install_online(wrap) then
+            online = true
             postinstall(wrap)
             page = page + 1
             clear()

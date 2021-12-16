@@ -29,6 +29,9 @@
   blue{await}(*{pid}:magenta{number}): magenta{number}, red{string}
     Halts the current process until the specified magenta{pid} no longer exists, then returns its magenta{exit status} and red{exit reason}.
 
+  blue{message}(*{pid}:magenta{number}, *{...})
+    Adds the provided message to the process's signal queue.  The message's length must be greater than zero.  This message will be prefixed with red{"ipc"} and the sending process's PID, both for security reasons (otherwise users could spoof arbitrary events to other processes!) and to avoid requiring specification for this in individual process's protocols.
+
   blue{info}([*{pid}:magenta{number}]): green{table}
     Returns a table of information about the process with the specified magenta{pid}, defaulting to the current process if a magenta{pid} is not specified.
 

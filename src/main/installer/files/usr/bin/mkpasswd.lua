@@ -174,7 +174,7 @@ while true do
   end
 end
 
-print("Saving changes")
+print("Saving changes to " .. args[1])
 local handle = assert(io.open(args[1], "w"))
 for i=0, #added, 1 do
   print("Writing user data for " .. added[i][2])

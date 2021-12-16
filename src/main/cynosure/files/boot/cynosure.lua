@@ -36,8 +36,8 @@ end
 
 do
   k._NAME = "Cynosure"
-  k._RELEASE = "1.9.2"
-  k._VERSION = "2021.09.19-default"
+  k._RELEASE = "1.11.0"
+  k._VERSION = "2021.12.16-default"
   _G._OSVERSION = string.format("%s r%s-%s", k._NAME, k._RELEASE, k._VERSION)
 end
 --#include "base/version.lua"
@@ -2617,7 +2617,7 @@ do
       self:write_byte(char)
     end
 
-    return true
+    return self
   end
 
   function buffer:seek(whence, offset)
@@ -3064,6 +3064,33 @@ do
         perms.user.COMPONENTS)
     end
     
+    local cpushsig = computer.pushSignal
+    local pushSignal
+    if k.cmdline["pushSignal.localized"] then
+      pushSignal = function(...)
+          return k.scheduler.info().data.self:push_signal(...)
+      end
+    elseif k.cmdline["pushSignal.unprotected"] then
+      k.log(k.loglevels.warn, "\27[101;97mWARNING\27[m got kernel argument pushSignal.unprotected=1 but that option is dangerous - proceeding anyway")
+      pushSignal = computer.pushSignal
+    else
+      -- blacklist these
+      local blacklist = {
+        key_down = true,
+        key_up = true,
+        component_added = true,
+        component_removed = true
+      }
+      pushSignal = function(s, ...)
+        checkArg(1, s, "string")
+        if not blacklist[s] then
+          return cpushsig(s, ...)
+        else
+          error("signal " .. s .. " cannot be created by userspace")
+        end
+      end
+    end
+    
     k.userspace.package.loaded.computer = {
       getDeviceInfo = wrap(computer.getDeviceInfo, perms.user.HWINFO),
       setArchitecture = wrap(computer.setArchitecture, perms.user.SETARCH),
@@ -3071,9 +3098,7 @@ do
       removeUser = wrap(computer.removeUser, perms.user.MANAGE_USERS),
       setBootAddress = wrap(computer.setBootAddress, perms.user.BOOTADDR),
       pullSignal = coroutine.yield,
-      pushSignal = function(...)
-        return k.scheduler.info().data.self:push_signal(...)
-      end
+      pushSignal = pushSignal
     }
     
     for f, v in pairs(computer) do
@@ -3447,7 +3472,8 @@ if (not k.cmdline.no_force_yields) then
     return s
   end
 
-  local function process(chunk)
+  local process
+  process = function(chunk)
     local i = 1
     local ret = ""
     local nq = 0
@@ -3459,7 +3485,12 @@ if (not k.cmdline.no_force_yields) then
         i = nextquote + 1
         nq = nq + 1
         if nq % 2 == 1 then
-          ch = process_section(ch)
+          -- the quote check might skip multiline strings, so use recursion and
+          -- avoid that.  i tried checking for multiline definitions at the same
+          -- time as quotes, but that was far too slow to be practical thanks to
+          -- the fact that OpenComputers wraps the Lua pattern matching
+          -- functions.
+          ch = process(ch)
         end
         ret = ret .. ch
       else
@@ -3867,6 +3898,22 @@ do
     
     return true
   end
+  
+  function api.message(proc, ...)
+    checkArg(1, proc, "number")
+
+    if not processes[proc] then
+      return nil, "no such process"
+    end
+
+    if select("#", ...) > 0 then
+      processes[proc]:push_signal("ipc", current, ...)
+    else
+      return nil, "signal data too short"
+    end
+
+    return true
+  end
 
   -- XXX: this is specifically for kernel use ***only*** - userspace does NOT
   -- XXX: get this function.  it is incredibly dangerous and should be used with
@@ -3895,6 +3942,13 @@ do
     else
       exit = err or 0
       err = proc.pstatus or "exited"
+    end
+
+    if proc.pid == 1 and exit ~= 0 then
+      for line in err:gmatch("[^\n]+") do
+        k.log(k.loglevels.error, line)
+      end
+      k.panic("Attempted to kill init!")
     end
 
     err = err or "died"
@@ -4104,6 +4158,7 @@ do
     end
     
     p.info = api.info
+    p.message = api.message
 
     p.signals = k.util.copy_table(api.signals)
   end)

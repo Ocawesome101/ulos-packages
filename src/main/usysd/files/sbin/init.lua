@@ -12,7 +12,7 @@ local usd = {}
 
 usd._VERSION_MAJOR = 1
 usd._VERSION_MINOR = 0
-usd._VERSION_PATCH = 6
+usd._VERSION_PATCH = 8
 usd._RUNNING_ON = "unknown"
 
 io.write(string.format("USysD version %d.%d.%d\n", usd._VERSION_MAJOR, usd._VERSION_MINOR,
@@ -191,7 +191,7 @@ do
     return true
   end
 
-  function usd.internal_stop()
+  function usd.internal_stop(name)
     usd.log(usd.statii.ok, "stopping service ", name)
     if not running[name] then
       usd.log(usd.statii.warn, "service ", name, " is not running")
@@ -269,7 +269,7 @@ do
   function usd.shutdown()
     usd.log(usd.statii.wait, "stopping services")
     for name in pairs(usd.running) do
-      usd.api.stop(name)
+      usd.internal_stop(name)
     end
     usd.log(usd.statii.ok, "stopped services")
 
@@ -304,11 +304,12 @@ while true do
     end
   end
   for i, req in pairs(usd.requests) do
-    print(i, req.op, req.name)
     if req.clear then
       usd.requests[i] = nil
-    else
-      usd.requests[i] = table.pack(usysd[req.op](req.name))
+    elseif usd[req.op] then
+      local r = table.pack(pcall(usd[req.op], req.name))
+      usd.requests[i] = r
+      r.performed = true
     end
   end
   if usd.__should_shut_down then

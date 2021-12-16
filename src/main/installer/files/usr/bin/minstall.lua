@@ -80,7 +80,6 @@ if online then
     "coreutils",
     "corelibs",
     "upm",
-    "cldr",
   }
   if full then
     pklist[#pklist+1] = "tle"
@@ -109,3 +108,13 @@ print("The base system has now been installed.")
 
 os.execute("mkpasswd -i /mnt/etc/passwd")
 os.execute("hnsetup")
+
+local computer = require("computer")
+if online then
+  print("Installing the boot loader")
+  os.execute("upm -fy --root=/mnt install cldr")
+end
+
+print("Press Enter to restart.")
+io.read()
+computer.shutdown(true)

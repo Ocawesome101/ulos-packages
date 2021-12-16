@@ -4,6 +4,7 @@ local path = require("path")
 local pipe = require("pipe")
 local text = require("text")
 local fs = require("filesystem")
+local glob_expand = require("glob")
 local process = require("process")
 local readline = require("readline")
 
@@ -19,7 +20,7 @@ local args, opts = require("argutil").getopt({
   }
 }, ...)
 
-local _VERSION_FULL = "1.1.0"
+local _VERSION_FULL = "1.2.2"
 local _VERSION_MAJOR = _VERSION_FULL:sub(1, -3)
 
 if opts.h or opts.help then
@@ -516,27 +517,18 @@ eval_2 = function(simplified, captureOutput, captureInput)
     elseif #simplified[i] > 0 then
       if #struct[#struct].command == 0 and aliases[simplified[i]] then
         local tokens = eval_1(mkrdr(tokenize(aliases[simplified[i]])))
-        for i=1, #tokens, 1 do table.insert(struct[#struct].command, tokens[i]) end
+        for i=1, #tokens, 1 do
+          table.insert(struct[#struct].command, tokens[i])
+        end
       else
-        if simplified[i]:sub(1,1) == "~" then simplified[i] = path.concat(os.getenv("HOME"), 
-          simplified[i]) end
-        if simplified[i]:sub(-1) == "*" then
-          local full = path.canonical(simplified[i])
-          if full:sub(-2) == "/*" then -- simpler
-            local files = fs.list(full:sub(1,-2)) or {}
-            for i=1, #files, 1 do
-              table.insert(struct[#struct].command, path.concat(full:sub(1,-2),
-                files[i]))
-            end
-          else
-            local _path, name = full:match("^(.+/)(.-)$")
-            local files = fs.list(_path) or {}
-            name = text.escape(name:sub(1,-2)) .. ".+$"
-            for i=1, #files, 1 do
-              if files[i]:match(name) then
-                table.insert(struct[#struct].command, path.concat(_path, files[i]))
-              end
-            end
+        if simplified[i]:sub(1,1) == "~" then
+          simplified[i] = path.concat(os.getenv("HOME"), simplified[i]:sub(2))
+        end
+        
+        local results = glob_expand(simplified[i])
+        if #results > 0 then
+          for i, path in ipairs(results) do
+            table.insert(struct[#struct].command, path)
           end
         else
           table.insert(struct[#struct].command, simplified[i])
@@ -638,6 +630,7 @@ local function process_prompt(ps)
 end
 
 function os.execute(...)
+  os.setenv("PATH", os.getenv("PATH") or "/bin:/sbin:/usr/bin")
   local cmd = table.concat({...}, " ")
   if #cmd > 0 then return eval_2(eval_1(mkrdr(tokenize(cmd)))) end
   return 0
