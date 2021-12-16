@@ -1,19 +1,16 @@
 #!/bin/bash
 
-repo="ocawesome101/ulos-external"
-name="external"
-path="/tmp/$name"
-subdir="flash"
+repo="atirut-w/ulos-programs/main"
+baseurl="https://raw.githubusercontent.com/$repo"
+outpath="files/"
 
-printf "downloading source\n"
-if ! [ -e $path ]; then
-  git clone https://github.com/$repo $path
-else
-  oldpwd=$PWD
-  cd $path
-  git pull
-  cd $oldpwd
-fi
+mkdir -p files
 
-rm -rf files && mkdir -p files
-cp -rv /tmp/external/$subdir/* files/
+download() {
+  printf "downloading $baseurl/$1..."
+  wget -q "$baseurl/$1" -O $outpath/$2
+  printf "done\n"
+}
+
+download "flash/flash.lua" "usr/bin/flash.lua"
+download "flash/manpage" "usr/man/1/flash"
