@@ -1,0 +1,5 @@
+*{NAME}
+    flash - flash your EEPROM with custom BIOSes
+
+*{SYNOPSIS}
+    flash <*{FILE}> [*{NAME}]
